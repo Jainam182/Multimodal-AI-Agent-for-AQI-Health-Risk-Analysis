@@ -1,0 +1,803 @@
+"""
+tools/health_tools.py
+──────────────────────
+Comprehensive health domain knowledge engine.
+Contains pollutant-health mappings, persona-specific risk rules,
+symptom tables, threshold logic, and scoring functions.
+
+This is the core of the Health Agent's domain intelligence.
+No LLM required – pure deterministic rules grounded in WHO/CPCB guidelines.
+"""
+
+from __future__ import annotations
+from typing import Dict, List, Tuple
+from schemas.agent_messages import AQICategory, RiskLevel
+
+# ─── AQI → Risk Level Mapping ─────────────────────────────────────────────────
+
+AQI_TO_RISK: List[Tuple[Tuple[int, int], RiskLevel, float]] = [
+    ((0, 50),    RiskLevel.MINIMAL,   1.0),
+    ((51, 100),  RiskLevel.LOW,       3.0),
+    ((101, 150), RiskLevel.MODERATE,  5.0),
+    ((151, 200), RiskLevel.HIGH,      6.5),
+    ((201, 300), RiskLevel.VERY_HIGH, 8.0),
+    ((301, 500), RiskLevel.CRITICAL,  9.5),
+]
+
+def aqi_to_risk_level(aqi: float) -> Tuple[RiskLevel, float]:
+    """Map AQI value to (RiskLevel, base_risk_score 0-10)."""
+    for (lo, hi), level, score in AQI_TO_RISK:
+        if lo <= aqi <= hi:
+            return level, score
+    return RiskLevel.CRITICAL, 10.0
+
+
+# ─── AQI → Category ───────────────────────────────────────────────────────────
+
+def aqi_to_category(aqi: float) -> AQICategory:
+    """India CPCB AQI category."""
+    if aqi <= 50:    return AQICategory.GOOD
+    if aqi <= 100:   return AQICategory.SATISFACTORY
+    if aqi <= 200:   return AQICategory.MODERATE
+    if aqi <= 300:   return AQICategory.POOR
+    if aqi <= 400:   return AQICategory.VERY_POOR
+    return AQICategory.SEVERE
+
+
+# ─── Pollutant Health Effects Table ───────────────────────────────────────────
+# Format: pollutant → list of (threshold µg/m³, health_note)
+# Thresholds are for 24h average unless noted.
+
+POLLUTANT_HEALTH_EFFECTS: Dict[str, List[Tuple[float, str]]] = {
+    "pm25": [
+        (15.0,  "Within WHO guideline. Minimal respiratory irritation."),
+        (35.0,  "Exceeds WHO 24h guideline. Mild irritation possible for sensitive groups."),
+        (55.0,  "Exceeds India CPCB limit. Increased respiratory symptoms likely in sensitive individuals."),
+        (100.0, "High exposure. Short-term: coughing, chest tightness. Long-term: lung inflammation, reduced function."),
+        (150.0, "Serious risk. Can penetrate deep into alveoli, enter bloodstream. Systemic inflammation risk."),
+        (250.0, "Hazardous. Emergency conditions – all groups at risk of acute respiratory failure."),
+    ],
+    "pm10": [
+        (45.0,  "Within WHO guideline. No significant health effect expected."),
+        (100.0, "Exceeds WHO limit. Coarse particles irritate nose and throat."),
+        (150.0, "High PM10. Aggravates asthma, bronchitis. Reduces lung function."),
+        (250.0, "Very high. Significant respiratory distress possible."),
+        (350.0, "Hazardous PM10 levels. All outdoor activity discouraged."),
+    ],
+    "no2": [
+        (25.0,  "Within WHO guideline. No significant effect."),
+        (40.0,  "WHO annual limit. Airway inflammation begins in sensitive individuals."),
+        (80.0,  "India 24h limit exceeded. Bronchial hyperresponsiveness, especially in asthmatics."),
+        (200.0, "Acute exposure threshold. Significant lung inflammation, increased infection susceptibility."),
+        (400.0, "Toxic levels. Pulmonary edema risk with prolonged exposure."),
+    ],
+    "co": [
+        (4000.0,  "Within WHO limit. Negligible CO health effect."),
+        (7000.0,  "Moderate CO. Headache, fatigue – especially with cardiovascular disease."),
+        (10000.0, "High CO. Confusion, chest pain. Heart patients at serious risk."),
+        (17000.0, "Dangerous CO. Impairs oxygen delivery. Risk of loss of consciousness."),
+    ],
+    "so2": [
+        (40.0,  "Within WHO guideline. Minimal effect."),
+        (80.0,  "India 24h limit. Eye and throat irritation. Worsens asthma."),
+        (200.0, "High SO2. Bronchoconstriction. Aggravates respiratory and cardiovascular disease."),
+        (500.0, "Hazardous SO2. Risk of acute respiratory distress."),
+    ],
+    "o3": [
+        (60.0,  "Low ozone. Minimal effect."),
+        (100.0, "WHO/India 8h limit. Throat and chest irritation during exercise."),
+        (160.0, "High ozone. Inflammation of lung airways. Reduced lung function."),
+        (240.0, "Hazardous ozone. Coughing, shortness of breath. All outdoor activity dangerous."),
+    ],
+}
+
+def get_pollutant_health_note(pollutant: str, value: float) -> str:
+    """Return appropriate health note for a pollutant at a given concentration."""
+    thresholds = POLLUTANT_HEALTH_EFFECTS.get(pollutant.lower(), [])
+    note = "No data available."
+    for threshold, health_note in sorted(thresholds, key=lambda x: x[0]):
+        if value >= threshold:
+            note = health_note
+    return note
+
+
+# ─── Persona Health Rules ─────────────────────────────────────────────────────
+
+PERSONA_RULES: Dict[str, Dict] = {
+    "children": {
+        "label": "Children (< 12 yrs)",
+        "risk_multiplier": 1.5,
+        "primary_vulnerabilities": ["pm25", "o3", "no2"],
+        "aqi_thresholds": {
+            "safe_outdoor": 50,
+            "limit_outdoor": 100,
+            "avoid_outdoor": 150,
+        },
+        "symptoms": {
+            RiskLevel.LOW:       ["Mild eye irritation", "Occasional cough"],
+            RiskLevel.MODERATE:  ["Persistent cough", "Nasal congestion", "Reduced stamina"],
+            RiskLevel.HIGH:      ["Wheezing", "Shortness of breath", "Eye/throat burning", "Fatigue"],
+            RiskLevel.VERY_HIGH: ["Chest tightness", "Difficulty breathing", "Nausea", "Bronchospasm"],
+            RiskLevel.CRITICAL:  ["Acute respiratory distress", "Emergency risk", "Hospitalisation possible"],
+        },
+        "short_term_notes": {
+            RiskLevel.LOW:       "Children's developing lungs are more susceptible to pollutants. Mild irritation possible even at this AQI level.",
+            RiskLevel.MODERATE:  "Children absorb proportionally more pollutants per kg body weight. Cough and reduced stamina may appear during outdoor play.",
+            RiskLevel.HIGH:      "Children's pulmonary development is at risk. Wheezing and breathing difficulty likely with continued exposure.",
+            RiskLevel.VERY_HIGH: "Children face acute respiratory distress risk. Immediate indoor shelter required — emergency services if breathless.",
+            RiskLevel.CRITICAL:  "Life-threatening exposure for children. Acute respiratory failure possible. Emergency medical care immediately.",
+        },
+        "long_term_notes": {
+            RiskLevel.LOW:       "Minimal long-term impact expected at current exposure levels.",
+            RiskLevel.MODERATE:  "Prolonged moderate exposure during developmental years may affect lung growth trajectory.",
+            RiskLevel.HIGH:      "Elevated risk of reduced lung capacity and increased asthma incidence from sustained exposure.",
+            RiskLevel.VERY_HIGH: "Significant risk of permanent lung damage and cognitive effects from NO2 and PM2.5 exposure.",
+            RiskLevel.CRITICAL:  "Severe long-term consequences: permanently reduced lung function, high lifetime asthma risk, cognitive impairment.",
+        },
+        "preventive_actions": {
+            RiskLevel.LOW:       ["Monitor air quality before outdoor play"],
+            RiskLevel.MODERATE:  ["Limit vigorous outdoor activity", "Keep inhaler handy if prescribed"],
+            RiskLevel.HIGH:      ["Stay indoors", "Run air purifier (HEPA)", "Wear N95 if outdoor necessary"],
+            RiskLevel.VERY_HIGH: ["No outdoor activity", "Seal windows", "Consult paediatrician"],
+            RiskLevel.CRITICAL:  ["Immediate indoor shelter", "Seek medical advice", "Emergency services if breathless"],
+        },
+    },
+
+    "elderly": {
+        "label": "Elderly (> 65 yrs)",
+        "risk_multiplier": 1.4,
+        "primary_vulnerabilities": ["pm25", "co", "o3"],
+        "aqi_thresholds": {
+            "safe_outdoor": 50,
+            "limit_outdoor": 100,
+            "avoid_outdoor": 150,
+        },
+        "symptoms": {
+            RiskLevel.LOW:       ["Mild throat irritation", "Slight fatigue"],
+            RiskLevel.MODERATE:  ["Increased breathlessness on exertion", "Worsened COPD/asthma symptoms"],
+            RiskLevel.HIGH:      ["Significant breathing difficulty", "Chest pain", "Dizziness", "Palpitations"],
+            RiskLevel.VERY_HIGH: ["Cardiac stress", "Acute respiratory failure risk", "Stroke risk elevated"],
+            RiskLevel.CRITICAL:  ["Life-threatening cardiovascular events", "Emergency hospitalisation"],
+        },
+        "short_term_notes": {
+            RiskLevel.LOW:       "Reduced immune and pulmonary reserve in elderly individuals. Mild irritation may occur.",
+            RiskLevel.MODERATE:  "PM2.5 can trigger arrhythmias and platelet aggregation within hours. Breathlessness on exertion likely.",
+            RiskLevel.HIGH:      "Significant cardiovascular and respiratory stress. Chest pain and dizziness indicate immediate risk.",
+            RiskLevel.VERY_HIGH: "Acute cardiac events and stroke risk are elevated. Emergency medications should be accessible.",
+            RiskLevel.CRITICAL:  "Life-threatening cardiovascular events imminent. Immediate emergency medical care required.",
+        },
+        "long_term_notes": {
+            RiskLevel.LOW:       "Minimal long-term impact at current exposure levels.",
+            RiskLevel.MODERATE:  "Cognitive decline and COPD progression may be accelerated with sustained exposure.",
+            RiskLevel.HIGH:      "Increased dementia risk and compound cardiovascular disease progression.",
+            RiskLevel.VERY_HIGH: "Significant risk of accelerated cognitive decline and COPD/heart disease worsening.",
+            RiskLevel.CRITICAL:  "Severe long-term consequences: dementia acceleration, end-stage COPD/heart disease progression.",
+        },
+        "preventive_actions": {
+            RiskLevel.LOW:       ["Morning walks before 7 AM when AQI is lower"],
+            RiskLevel.MODERATE:  ["Avoid peak traffic hours outdoors", "Stay hydrated"],
+            RiskLevel.HIGH:      ["Indoor activity only", "HEPA purifier", "Medication review with doctor"],
+            RiskLevel.VERY_HIGH: ["Complete indoor rest", "Emergency contacts on standby"],
+            RiskLevel.CRITICAL:  ["Do not go outdoors", "Immediate medical assistance if symptoms worsen"],
+        },
+    },
+
+    "asthma_patient": {
+        "label": "Asthma Patients",
+        "risk_multiplier": 2.0,
+        "primary_vulnerabilities": ["pm25", "no2", "o3", "so2"],
+        "aqi_thresholds": {
+            "safe_outdoor": 50,
+            "limit_outdoor": 75,
+            "avoid_outdoor": 100,
+        },
+        "symptoms": {
+            RiskLevel.LOW:       ["Mild wheeze", "Slight increase in bronchodilator use"],
+            RiskLevel.MODERATE:  ["Wheezing", "Chest tightness", "Night symptoms", "Reduced peak flow"],
+            RiskLevel.HIGH:      ["Frequent attacks", "Emergency inhaler use", "Nocturnal breathlessness"],
+            RiskLevel.VERY_HIGH: ["Status asthmaticus risk", "Hospital attendance likely"],
+            RiskLevel.CRITICAL:  ["Life-threatening bronchospasm", "Emergency room immediately"],
+        },
+        "short_term_notes": {
+            RiskLevel.LOW:       "Asthmatic airways are hypersensitive. Mild wheezing possible even at low AQI.",
+            RiskLevel.MODERATE:  "AQI 75-100 can trigger significant bronchoconstriction within 30 minutes. Keep rescue inhaler close.",
+            RiskLevel.HIGH:      "Severe bronchoconstriction likely. Emergency inhaler use probable. Avoid outdoor exposure entirely.",
+            RiskLevel.VERY_HIGH: "Status asthmaticus risk imminent. Hospital attendance likely. Absolute indoor rest required.",
+            RiskLevel.CRITICAL:  "Life-threatening bronchospasm. Emergency room immediately. IV bronchodilators may be required.",
+        },
+        "long_term_notes": {
+            RiskLevel.LOW:       "Minimal long-term impact at current exposure levels.",
+            RiskLevel.MODERATE:  "Repeated moderate exposure contributes to airway sensitisation and increased attack frequency.",
+            RiskLevel.HIGH:      "Airway remodelling accelerated. Increased severity and frequency of attacks expected.",
+            RiskLevel.VERY_HIGH: "Significant airway remodelling. High likelihood of progressing to COPD.",
+            RiskLevel.CRITICAL:  "End-stage airway damage. Severe irreversible respiratory impairment likely.",
+        },
+        "preventive_actions": {
+            RiskLevel.LOW:       ["Carry rescue inhaler", "Check AQI before exercise"],
+            RiskLevel.MODERATE:  ["Avoid strenuous outdoor activity", "Pre-medicate if prescribed"],
+            RiskLevel.HIGH:      ["Stay indoors", "Avoid opening windows", "HEPA purifier on"],
+            RiskLevel.VERY_HIGH: ["Absolute indoor rest", "Oral corticosteroids as prescribed"],
+            RiskLevel.CRITICAL:  ["Emergency services", "IV bronchodilators may be required"],
+        },
+    },
+
+    "copd_patient": {
+        "label": "COPD Patients",
+        "risk_multiplier": 2.2,
+        "primary_vulnerabilities": ["pm25", "pm10", "no2", "so2", "co"],
+        "aqi_thresholds": {
+            "safe_outdoor": 50,
+            "limit_outdoor": 75,
+            "avoid_outdoor": 100,
+        },
+        "symptoms": {
+            RiskLevel.LOW:       ["Slight increase in sputum", "Mild dyspnoea"],
+            RiskLevel.MODERATE:  ["Productive cough", "Increased exertional breathlessness"],
+            RiskLevel.HIGH:      ["Acute exacerbation (AECOPD) risk", "Cyanosis possible", "ER visit warranted"],
+            RiskLevel.VERY_HIGH: ["Acute respiratory failure", "ICU admission risk"],
+            RiskLevel.CRITICAL:  ["Life-threatening. Immediate emergency care."],
+        },
+        "short_term_notes": {
+            RiskLevel.LOW:       "Permanently reduced lung function. Mild increase in breathlessness possible.",
+            RiskLevel.MODERATE:  "PM2.5 triggers acute exacerbations within 1-2 days. Sputum and cough may increase.",
+            RiskLevel.HIGH:      "AECOPD likely. ER visit warranted. Cyanosis indicates dangerous oxygen deprivation.",
+            RiskLevel.VERY_HIGH: "Acute respiratory failure imminent. ICU admission probable. Supplemental oxygen critical.",
+            RiskLevel.CRITICAL:  "Life-threatening respiratory failure. Immediate emergency care and possible intubation.",
+        },
+        "long_term_notes": {
+            RiskLevel.LOW:       "Minimal additional long-term impact at current exposure.",
+            RiskLevel.MODERATE:  "FEV1 decline accelerated. Pulmonary hypertension risk increases with sustained exposure.",
+            RiskLevel.HIGH:      "Significant FEV1 decline. Pulmonary hypertension progression likely.",
+            RiskLevel.VERY_HIGH: "Severe acceleration of FEV1 decline. 5-year survival prognosis worsens considerably.",
+            RiskLevel.CRITICAL:  "End-stage respiratory failure. Life expectancy severely compromised.",
+        },
+        "preventive_actions": {
+            RiskLevel.LOW:       ["Pulmonary rehabilitation indoors", "Nebuliser as prescribed"],
+            RiskLevel.MODERATE:  ["Strictly indoors", "Monitor oxygen saturation (SpO2)"],
+            RiskLevel.HIGH:      ["Supplemental oxygen ready", "Contact pulmonologist"],
+            RiskLevel.VERY_HIGH: ["Hospital standby", "Do not delay seeking care"],
+            RiskLevel.CRITICAL:  ["Call ambulance immediately"],
+        },
+    },
+
+    "heart_patient": {
+        "label": "Cardiovascular / Heart Patients",
+        "risk_multiplier": 1.8,
+        "primary_vulnerabilities": ["pm25", "co", "no2"],
+        "aqi_thresholds": {
+            "safe_outdoor": 50,
+            "limit_outdoor": 100,
+            "avoid_outdoor": 150,
+        },
+        "symptoms": {
+            RiskLevel.LOW:       ["Mild fatigue", "Slight increase in BP"],
+            RiskLevel.MODERATE:  ["Palpitations", "Angina on exertion", "Elevated blood pressure"],
+            RiskLevel.HIGH:      ["Chest pain", "Arrhythmia", "Reduced exercise tolerance"],
+            RiskLevel.VERY_HIGH: ["Acute coronary syndrome risk", "Cardiac decompensation"],
+            RiskLevel.CRITICAL:  ["Myocardial infarction risk", "Emergency cardiac care"],
+        },
+        "short_term_notes": {
+            RiskLevel.LOW:       "PM2.5 enters bloodstream causing mild platelet aggregation. Slight fatigue possible.",
+            RiskLevel.MODERATE:  "Autonomic nervous system dysregulation beginning. Palpitations and elevated BP on exertion.",
+            RiskLevel.HIGH:      "Significant arrhythmia and chest pain risk. Endothelial dysfunction worsening rapidly.",
+            RiskLevel.VERY_HIGH: "Acute coronary syndrome imminent. Cardiac decompensation likely. Emergency plan activated.",
+            RiskLevel.CRITICAL:  "Myocardial infarction risk extremely high. Immediate emergency cardiac care required.",
+        },
+        "long_term_notes": {
+            RiskLevel.LOW:       "Minimal long-term impact at current exposure levels.",
+            RiskLevel.MODERATE:  "Coronary artery disease progression accelerated with sustained moderate exposure.",
+            RiskLevel.HIGH:      "Significant coronary artery disease progression. Increased cardiac mortality risk.",
+            RiskLevel.VERY_HIGH: "Severe cardiovascular damage accumulation. High stroke and cardiac mortality risk.",
+            RiskLevel.CRITICAL:  "End-stage cardiovascular disease. Life-threatening cardiac events imminent.",
+        },
+        "preventive_actions": {
+            RiskLevel.LOW:       ["Light indoor exercise preferred", "Monitor BP"],
+            RiskLevel.MODERATE:  ["No strenuous outdoor activity", "Medication adherence critical"],
+            RiskLevel.HIGH:      ["Complete indoor rest", "Cardiac emergency plan ready"],
+            RiskLevel.VERY_HIGH: ["Call cardiologist", "Emergency medications accessible"],
+            RiskLevel.CRITICAL:  ["Emergency room immediately"],
+        },
+    },
+
+    "athlete": {
+        "label": "Athletes / Runners",
+        "risk_multiplier": 1.3,
+        "primary_vulnerabilities": ["pm25", "o3", "no2"],
+        "aqi_thresholds": {
+            "safe_outdoor": 50,
+            "limit_outdoor": 100,
+            "avoid_outdoor": 150,
+        },
+        "symptoms": {
+            RiskLevel.LOW:       ["Negligible effect at rest; slight performance reduction during intense exercise"],
+            RiskLevel.MODERATE:  ["Throat and chest irritation", "Reduced VO2max (~5–10%)"],
+            RiskLevel.HIGH:      ["Significant performance impairment", "Coughing", "Chest tightness during exertion"],
+            RiskLevel.VERY_HIGH: ["Inflammation-induced bronchospasm", "Must cease outdoor exercise"],
+            RiskLevel.CRITICAL:  ["Outdoor training life-threatening. Indoor only or rest."],
+        },
+        "short_term_notes": {
+            RiskLevel.LOW:       "Athletes inhale 10-20x more air during training. Oral breathing bypasses nasal filtration. Minor performance impact.",
+            RiskLevel.MODERATE:  "Significant VO2max reduction (~5-10%). Throat and chest irritation during intense exertion.",
+            RiskLevel.HIGH:      "Major performance impairment. Inflammation-induced bronchospasm possible during high-intensity efforts.",
+            RiskLevel.VERY_HIGH: "Must cease outdoor exercise immediately. Inflammation-induced bronchospasm risk is high.",
+            RiskLevel.CRITICAL:  "Outdoor training is life-threatening. Immediate indoor shelter. Medical check if symptoms persist.",
+        },
+        "long_term_notes": {
+            RiskLevel.LOW:       "Minimal long-term impact at current exposure levels.",
+            RiskLevel.MODERATE:  "Cumulative lung inflammation may develop with regular training in moderate conditions.",
+            RiskLevel.HIGH:      "Exercise-induced bronchoconstriction likely. Long-term performance decline probable.",
+            RiskLevel.VERY_HIGH: "Significant cumulative lung inflammation. Permanent exercise-induced bronchoconstriction risk.",
+            RiskLevel.CRITICAL:  "Severe respiratory damage. Long-term athletic performance capacity permanently reduced.",
+        },
+        "preventive_actions": {
+            RiskLevel.LOW:       ["Train in early morning or late evening when AQI is lowest"],
+            RiskLevel.MODERATE:  ["Switch to indoor training", "Use air-filtered gym"],
+            RiskLevel.HIGH:      ["No outdoor training", "Treadmill/indoor alternatives"],
+            RiskLevel.VERY_HIGH: ["Rest day. Don't compensate with higher intensity later."],
+            RiskLevel.CRITICAL:  ["No training. Medical check if symptoms persist."],
+        },
+    },
+
+    "outdoor_worker": {
+        "label": "Outdoor Workers",
+        "risk_multiplier": 1.6,
+        "primary_vulnerabilities": ["pm25", "pm10", "no2", "co"],
+        "aqi_thresholds": {
+            "safe_outdoor": 100,
+            "limit_outdoor": 150,
+            "avoid_outdoor": 200,
+        },
+        "symptoms": {
+            RiskLevel.LOW:       ["Minimal risk during standard work hours"],
+            RiskLevel.MODERATE:  ["Eye and throat irritation", "Fatigue", "Mild headache"],
+            RiskLevel.HIGH:      ["Persistent cough", "Breathlessness during physical labour"],
+            RiskLevel.VERY_HIGH: ["Nausea", "Dizziness", "Chest pain", "Must stop work"],
+            RiskLevel.CRITICAL:  ["Medical emergency. Evacuate to clean-air area immediately."],
+        },
+        "short_term_notes": {
+            RiskLevel.LOW:       "8-10 hours of continuous exposure. Basic PPE sufficient at this level.",
+            RiskLevel.MODERATE:  "Cumulative dose from 8-10 hour shift amplified by physical labour. Eye/throat irritation likely.",
+            RiskLevel.HIGH:      "Significant respiratory distress developing. Persistent cough and breathlessness during labour.",
+            RiskLevel.VERY_HIGH: "Nausea, dizziness, chest pain indicate dangerous cumulative dose. Must stop work immediately.",
+            RiskLevel.CRITICAL:  "Medical emergency. Evacuate to clean-air area immediately. Employer liability and regulatory notification required.",
+        },
+        "long_term_notes": {
+            RiskLevel.LOW:       "Minimal long-term impact at current exposure levels.",
+            RiskLevel.MODERATE:  "Cumulative occupational exposure begins contributing to respiratory decline.",
+            RiskLevel.HIGH:      "Significant pneumoconiosis and COPD risk accumulation. Cardiovascular disease risk elevated.",
+            RiskLevel.VERY_HIGH: "Severe occupational disease risk. Pneumoconiosis and lung cancer risk dramatically increased.",
+            RiskLevel.CRITICAL:  "End-stage occupational lung disease. Life expectancy significantly reduced.",
+        },
+        "preventive_actions": {
+            RiskLevel.LOW:       ["Standard PPE", "Hydrate well"],
+            RiskLevel.MODERATE:  ["N95 mask mandatory", "Regular indoor breaks"],
+            RiskLevel.HIGH:      ["Half-day outdoor shifts only", "Respirator-grade PPE"],
+            RiskLevel.VERY_HIGH: ["Work suspension if possible", "Immediate employer notification"],
+            RiskLevel.CRITICAL:  ["Cease all outdoor work", "Employer liability. Regulatory notification."],
+        },
+    },
+
+    "general_population": {
+        "label": "General Population",
+        "risk_multiplier": 1.0,
+        "primary_vulnerabilities": ["pm25", "o3"],
+        "aqi_thresholds": {
+            "safe_outdoor": 100,
+            "limit_outdoor": 200,
+            "avoid_outdoor": 300,
+        },
+        "symptoms": {
+            RiskLevel.LOW:       ["No significant symptoms expected"],
+            RiskLevel.MODERATE:  ["Minor irritation possible during prolonged outdoor activity"],
+            RiskLevel.HIGH:      ["Eye/throat irritation", "Mild cough", "Reduced stamina"],
+            RiskLevel.VERY_HIGH: ["Significant symptoms", "Limit all outdoor activities"],
+            RiskLevel.CRITICAL:  ["Emergency health risk for all. Shelter indoors."],
+        },
+        "short_term_notes": {
+            RiskLevel.LOW:       "Healthy adults have significant physiological reserve. No significant symptoms expected.",
+            RiskLevel.MODERATE:  "Minor irritation possible during prolonged outdoor activity. Measurable lung function decline begins.",
+            RiskLevel.HIGH:      "Eye/throat irritation and mild cough. Reduced stamina during physical exertion.",
+            RiskLevel.VERY_HIGH: "Significant symptoms developing. All outdoor activities should be limited.",
+            RiskLevel.CRITICAL:  "Emergency health risk for all. Measurable lung function decline even in healthy individuals.",
+        },
+        "long_term_notes": {
+            RiskLevel.LOW:       "No significant long-term health impact at current exposure levels.",
+            RiskLevel.MODERATE:  "Increased risk of lung cancer and cognitive decline with chronic moderate exposure.",
+            RiskLevel.HIGH:      "Significant increase in lung cancer risk and cognitive decline linked to sustained exposure.",
+            RiskLevel.VERY_HIGH: "Severe long-term health consequences. Lung cancer and cardiovascular disease risk elevated.",
+            RiskLevel.CRITICAL:  "Life expectancy reduction likely from severe chronic exposure.",
+        },
+        "preventive_actions": {
+            RiskLevel.LOW:       ["Normal activities. Air quality is acceptable."],
+            RiskLevel.MODERATE:  ["Sensitive individuals may limit prolonged outdoor activity"],
+            RiskLevel.HIGH:      ["Limit outdoor exertion", "Keep windows closed"],
+            RiskLevel.VERY_HIGH: ["Stay indoors when possible", "Use air purifier"],
+            RiskLevel.CRITICAL:  ["Shelter in place", "Avoid all outdoor exposure"],
+        },
+    },
+
+    "pregnant": {
+        "label": "Pregnant Women",
+        "risk_multiplier": 1.7,
+        "primary_vulnerabilities": ["pm25", "no2", "co"],
+        "aqi_thresholds": {
+            "safe_outdoor": 50,
+            "limit_outdoor": 100,
+            "avoid_outdoor": 150,
+        },
+        "symptoms": {
+            RiskLevel.LOW:       ["Minimal risk; slight fatigue"],
+            RiskLevel.MODERATE:  ["Increased cardiovascular strain", "Shortness of breath"],
+            RiskLevel.HIGH:      ["Preterm birth risk elevated", "Fetal oxygen delivery concern"],
+            RiskLevel.VERY_HIGH: ["Significant fetal risk", "Obstetric consultation needed"],
+            RiskLevel.CRITICAL:  ["Medical emergency – fetal hypoxia risk"],
+        },
+        "short_term_notes": {
+            RiskLevel.LOW:       "Air pollutants cross placental barrier. CO reduces fetal oxygen delivery slightly.",
+            RiskLevel.MODERATE:  "Increased cardiovascular strain. Fetal oxygen delivery may be compromised.",
+            RiskLevel.HIGH:      "Preterm birth risk elevated. PM2.5 and CO exposure affecting fetal development.",
+            RiskLevel.VERY_HIGH: "Significant fetal risk. Obstetric consultation urgently needed.",
+            RiskLevel.CRITICAL:  "Medical emergency – fetal hypoxia risk. Immediate emergency medical care.",
+        },
+        "long_term_notes": {
+            RiskLevel.LOW:       "Minimal long-term impact at current exposure levels.",
+            RiskLevel.MODERATE:  "Association with childhood asthma development in offspring begins at moderate exposure.",
+            RiskLevel.HIGH:      "Increased childhood asthma, autism spectrum disorder risk for child.",
+            RiskLevel.VERY_HIGH: "Significant cognitive development reduction risk for child. Autism spectrum disorder association.",
+            RiskLevel.CRITICAL:  "Severe fetal developmental impact. Long-term neurological effects on child probable.",
+        },
+        "preventive_actions": {
+            RiskLevel.LOW:       ["Light outdoor walks are acceptable", "Monitor air quality daily"],
+            RiskLevel.MODERATE:  ["Limit outdoor time", "HEPA purifier indoors"],
+            RiskLevel.HIGH:      ["Stay indoors", "Increase prenatal check frequency"],
+            RiskLevel.VERY_HIGH: ["Full indoor rest", "Contact obstetrician"],
+            RiskLevel.CRITICAL:  ["Emergency medical care if any respiratory symptoms"],
+        },
+    },
+
+    "respiratory_patient": {
+        "label": "Respiratory Conditions (non-asthma/COPD)",
+        "risk_multiplier": 1.9,
+        "primary_vulnerabilities": ["pm25", "pm10", "no2", "so2"],
+        "aqi_thresholds": {
+            "safe_outdoor": 50,
+            "limit_outdoor": 100,
+            "avoid_outdoor": 150,
+        },
+        "symptoms": {
+            RiskLevel.LOW:       ["Mild irritation"],
+            RiskLevel.MODERATE:  ["Increased symptoms", "Sputum production"],
+            RiskLevel.HIGH:      ["Exacerbation of underlying condition", "Breathlessness"],
+            RiskLevel.VERY_HIGH: ["Hospitalisation risk"],
+            RiskLevel.CRITICAL:  ["Emergency care required"],
+        },
+        "short_term_notes": {
+            RiskLevel.LOW:       "Pre-existing respiratory conditions make airways more susceptible. Mild irritation possible.",
+            RiskLevel.MODERATE:  "Increased pollutant-induced inflammation. Sputum production and symptoms likely to increase.",
+            RiskLevel.HIGH:      "Exacerbation of underlying condition. Breathlessness indicates serious inflammation.",
+            RiskLevel.VERY_HIGH: "Hospitalisation likely. Immediate specialist consultation required.",
+            RiskLevel.CRITICAL:  "Emergency care required. Life-threatening respiratory failure possible.",
+        },
+        "long_term_notes": {
+            RiskLevel.LOW:       "Minimal additional long-term impact at current exposure levels.",
+            RiskLevel.MODERATE:  "Progressive respiratory function decline accelerated by sustained exposure.",
+            RiskLevel.HIGH:      "Significant progressive decline in respiratory function.",
+            RiskLevel.VERY_HIGH: "Severe acceleration of respiratory function loss. End-stage disease risk elevated.",
+            RiskLevel.CRITICAL:  "End-stage respiratory failure. Life expectancy severely compromised.",
+        },
+        "preventive_actions": {
+            RiskLevel.LOW:       ["Monitor symptoms closely"],
+            RiskLevel.MODERATE:  ["Stay indoors when possible"],
+            RiskLevel.HIGH:      ["Indoor rest, medication review"],
+            RiskLevel.VERY_HIGH: ["Specialist consultation"],
+            RiskLevel.CRITICAL:  ["Emergency services"],
+        },
+    },
+}
+
+
+# ─── Feature 1: Per-Persona Pollutant Weight Table (MPRS) ──────────────────────
+# Research: "For an asthmatic user, the weight for SO2 and O3 should be
+# increased, as these are primary triggers for airway hyper-responsiveness."
+# Weights > 1.0 amplify that pollutant's contribution, < 1.0 dampen it.
+
+_DEFAULT_WEIGHTS = {"pm25": 1.0, "pm10": 1.0, "no2": 1.0, "so2": 1.0, "co": 1.0, "o3": 1.0}
+
+PERSONA_POLLUTANT_WEIGHTS: Dict[str, Dict[str, float]] = {
+    "children":           {"pm25": 1.8, "o3": 1.5, "no2": 1.3, "pm10": 1.2, "so2": 1.0, "co": 0.8},
+    "elderly":            {"pm25": 1.6, "co": 1.8, "o3": 1.4, "no2": 1.2, "pm10": 1.0, "so2": 1.0},
+    "asthma_patient":     {"pm25": 1.5, "no2": 1.8, "o3": 2.0, "so2": 2.0, "pm10": 1.0, "co": 0.8},
+    "copd_patient":       {"pm25": 2.0, "pm10": 1.5, "no2": 1.6, "so2": 1.5, "co": 1.4, "o3": 1.2},
+    "heart_patient":      {"pm25": 2.0, "co": 2.5, "no2": 1.5, "o3": 1.0, "so2": 0.8, "pm10": 0.8},
+    "athlete":            {"pm25": 1.4, "o3": 1.8, "no2": 1.5, "pm10": 1.2, "so2": 1.0, "co": 1.0},
+    "outdoor_worker":     {"pm25": 1.5, "pm10": 1.5, "no2": 1.3, "co": 1.3, "so2": 1.0, "o3": 1.0},
+    "general_population": {"pm25": 1.2, "o3": 1.1, "no2": 1.0, "pm10": 1.0, "so2": 1.0, "co": 1.0},
+    "pregnant":           {"pm25": 2.0, "co": 2.0, "no2": 1.5, "o3": 1.0, "so2": 1.0, "pm10": 0.8},
+    "respiratory_patient":{"pm25": 1.8, "pm10": 1.5, "no2": 1.6, "so2": 1.5, "o3": 1.3, "co": 1.0},
+}
+
+
+# ─── Feature 2: Exposure Context — Activity Level & Indoor Protection ──────────
+# Research: "A person running (60-100 L/min) inhales significantly more
+# pollutants than at rest (6-10 L/min)." Multipliers relative to resting.
+
+ACTIVITY_VENTILATION: Dict[str, Tuple[float, str]] = {
+    "resting":   (1.0,  "6–10 L/min — seated, sleeping, watching TV"),
+    "light":     (2.5,  "15–25 L/min — walking, light housework, commuting"),
+    "moderate":  (5.0,  "30–50 L/min — brisk walking, cycling, gardening"),
+    "vigorous":  (10.0, "60–100 L/min — running, heavy labor, competitive sport"),
+}
+
+# Research: "HEPA filters can reduce indoor PM2.5 by up to 90%."
+# Protection factor: what fraction of outdoor pollutants reach you indoors.
+INDOOR_PROTECTION: Dict[str, Tuple[float, str]] = {
+    "outdoor":          (1.0,  "Full outdoor exposure — no protection"),
+    "indoor_no_filter": (0.70, "Indoors, no filter — ~30% natural reduction"),
+    "indoor_basic":     (0.40, "Indoors with basic AC — ~60% reduction"),
+    "indoor_hepa":      (0.10, "Indoors with HEPA filter — ~90% PM reduction"),
+}
+
+# Mask effectiveness (for recommendations, not score calc)
+MASK_EFFECTIVENESS: Dict[str, Dict[str, float]] = {
+    "n95":      {"pm25": 0.95, "pm10": 0.98, "no2": 0.0, "o3": 0.0, "so2": 0.0, "co": 0.0},
+    "surgical": {"pm25": 0.30, "pm10": 0.50, "no2": 0.0, "o3": 0.0, "so2": 0.0, "co": 0.0},
+    "cloth":    {"pm25": 0.10, "pm10": 0.20, "no2": 0.0, "o3": 0.0, "so2": 0.0, "co": 0.0},
+}
+
+
+def get_mask_recommendation(aqi: float, persona: str) -> str:
+    """Return mask advice based on AQI and persona vulnerability."""
+    rules = PERSONA_RULES.get(persona, PERSONA_RULES["general_population"])
+    avoid = rules["aqi_thresholds"]["avoid_outdoor"]
+    limit = rules["aqi_thresholds"]["limit_outdoor"]
+
+    if aqi <= limit:
+        return "😷 No mask required at current levels. Cloth mask optional for comfort."
+    elif aqi <= avoid:
+        return "😷 N95 mask recommended if going outdoors. Surgical masks provide negligible PM2.5 protection."
+    else:
+        return "😷 N95/N99 respirator essential outdoors. Note: masks do NOT filter gases (O₃, NO₂, CO). Limit exposure time."
+
+
+# ─── Feature 3: Pollutant Synergy Model ────────────────────────────────────────
+# Research: "PM2.5 carries PAHs that generate ROS; O3 + PM2.5 together cause
+# amplified oxidative stress exceeding individual effects."
+
+POLLUTANT_SYNERGIES: List[Tuple[str, str, float, str]] = [
+    ("pm25", "o3",  1.4, "PM2.5 + O₃ amplifies oxidative stress in lung tissue"),
+    ("pm25", "no2", 1.3, "PM2.5 + NO₂ synergistically increases airway inflammation"),
+    ("no2",  "so2", 1.3, "NO₂ + SO₂ together cause compounded bronchoconstriction"),
+    ("pm25", "co",  1.2, "PM2.5 + CO jointly impair oxygen delivery and cardiac rhythm"),
+    ("o3",   "so2", 1.2, "O₃ + SO₂ combined worsens respiratory distress"),
+]
+
+
+def compute_synergy_penalty(pollutants: Dict[str, float]) -> Tuple[float, List[str]]:
+    """
+    Check if co-occurring elevated pollutants trigger synergy effects.
+    Returns (penalty_score_addition, list_of_active_synergy_descriptions).
+    """
+    from config import POLLUTANT_LIMITS
+
+    penalty = 0.0
+    active_synergies: List[str] = []
+
+    for pa, pb, multiplier, description in POLLUTANT_SYNERGIES:
+        va = pollutants.get(pa, 0)
+        vb = pollutants.get(pb, 0)
+        la = POLLUTANT_LIMITS.get(pa, {}).get("who_24h") or POLLUTANT_LIMITS.get(pa, {}).get("who_8h", 999)
+        lb = POLLUTANT_LIMITS.get(pb, {}).get("who_24h") or POLLUTANT_LIMITS.get(pb, {}).get("who_8h", 999)
+
+        # Synergy activates when BOTH pollutants are ≥80% of WHO limit
+        if va >= la * 0.8 and vb >= lb * 0.8:
+            # Higher exceedance = stronger synergy
+            combined_exceedance = (va / la + vb / lb) / 2
+            bonus = (multiplier - 1.0) * min(combined_exceedance, 2.0) * 1.5
+            penalty += bonus
+            active_synergies.append(description)
+
+    return round(penalty, 2), active_synergies
+
+
+# ─── Hazard Index (WHO) ────────────────────────────────────────────────────────
+# Research: "HI = Σ(Concentration_i / Limit_i). If HI > 1, the combined
+# effect of multiple pollutants poses a health risk."
+
+def compute_hazard_index(pollutants: Dict[str, float]) -> Tuple[float, str]:
+    """
+    Compute WHO Hazard Index: sum of (concentration / limit) across pollutants.
+    HI > 1.0 means combined exposure is concerning even if individual levels are OK.
+    Returns (hazard_index_value, interpretation_text).
+    """
+    from config import POLLUTANT_LIMITS
+
+    hi = 0.0
+    for poll in ["pm25", "pm10", "no2", "so2", "o3", "co"]:
+        val = pollutants.get(poll, 0)
+        limit = POLLUTANT_LIMITS.get(poll, {}).get("who_24h") or POLLUTANT_LIMITS.get(poll, {}).get("who_8h")
+        if val and limit:
+            hi += val / limit
+
+    hi = round(hi, 2)
+
+    if hi <= 0.5:
+        interpretation = "✅ Low combined exposure — well within WHO safe limits."
+    elif hi <= 1.0:
+        interpretation = "⚠️ Moderate combined exposure — individual limits OK but approaching combined risk threshold."
+    elif hi <= 2.0:
+        interpretation = "🔶 Elevated combined exposure — multi-pollutant health risk even if individual limits seem OK."
+    elif hi <= 3.0:
+        interpretation = "🔴 High combined exposure — significant multi-pollutant health risk. Limit outdoor time."
+    else:
+        interpretation = "🚨 Severe combined exposure — all groups at serious risk from pollutant cocktail effect."
+
+    return hi, interpretation
+
+
+# ─── Risk Score Calculator (MPRS — Features 1+2+3 integrated) ──────────────────
+
+def calculate_risk_score(
+    aqi: float,
+    persona: str,
+    pollutants: Dict[str, float],
+    exposure_hours: float = 24.0,
+    activity_level: str = "light",       # Feature 2: "resting" | "light" | "moderate" | "vigorous"
+    environment: str = "outdoor",        # Feature 2: "outdoor" | "indoor_no_filter" | "indoor_basic" | "indoor_hepa"
+) -> Tuple[float, RiskLevel]:
+    """
+    Multi-Pollutant Risk Score (MPRS) — advanced health risk calculator.
+
+    Algorithm:
+    1. Map AQI to base risk score (0–10)
+    2. Apply persona-specific multiplier
+    3. MPRS: weighted pollutant penalties using per-persona weights (Feature 1)
+    4. Add synergy penalties for co-occurring elevated pollutants (Feature 3)
+    5. Apply ventilation rate multiplier from activity level (Feature 2)
+    6. Apply indoor protection factor (Feature 2)
+    7. Apply exposure duration factor (log-scaled)
+
+    Returns: (risk_score 0–10, risk_level)
+    """
+    import math
+
+    _, base_score = aqi_to_risk_level(aqi)
+
+    rules = PERSONA_RULES.get(persona, PERSONA_RULES["general_population"])
+    multiplier = rules["risk_multiplier"]
+
+    # ── Feature 2: Effective pollutant concentrations ──────────────────────────
+    # Indoor protection reduces effective concentration
+    protection, _ = INDOOR_PROTECTION.get(environment, (1.0, ""))
+    effective_pollutants = {k: v * protection for k, v in pollutants.items()}
+
+    # ── Feature 1: MPRS — weighted pollutant penalty ──────────────────────────
+    from config import POLLUTANT_LIMITS
+    weights = PERSONA_POLLUTANT_WEIGHTS.get(persona, _DEFAULT_WEIGHTS)
+    pollutant_penalty = 0.0
+
+    for poll, weight in weights.items():
+        val = effective_pollutants.get(poll, 0.0)
+        if val and poll in POLLUTANT_LIMITS:
+            india_limit = (POLLUTANT_LIMITS[poll].get("india_24h")
+                           or POLLUTANT_LIMITS[poll].get("india_8h", 100.0))
+            if india_limit > 0:
+                exceedance_ratio = val / india_limit
+                # Penalty starts at 50% of limit (not just above 100%)
+                if exceedance_ratio > 0.5:
+                    pollutant_penalty += weight * min((exceedance_ratio - 0.5) * 0.6, 1.2)
+
+    # ── Feature 3: Synergy penalty ────────────────────────────────────────────
+    synergy_penalty, _ = compute_synergy_penalty(effective_pollutants)
+
+    # ── Feature 2: Ventilation rate multiplier ────────────────────────────────
+    vent_mult, _ = ACTIVITY_VENTILATION.get(activity_level, (1.0, ""))
+    # Normalize: light activity (2.5) is the baseline (1.0x score impact)
+    # vigorous (10.0) → 1.4x, resting (1.0) → 0.7x
+    vent_factor = 0.5 + 0.5 * math.log1p(vent_mult) / math.log1p(10.0)
+
+    # ── Duration factor: more hours = more accumulated dose ───────────────────
+    duration_factor = math.log1p(exposure_hours) / math.log1p(24)
+
+    # ── Assemble final score ──────────────────────────────────────────────────
+    raw_score = (
+        (base_score * multiplier + pollutant_penalty + synergy_penalty)
+        * duration_factor
+        * vent_factor
+    )
+    clamped_score = min(raw_score, 10.0)
+
+    # Map back to risk level
+    if clamped_score < 2:     level = RiskLevel.MINIMAL
+    elif clamped_score < 4:   level = RiskLevel.LOW
+    elif clamped_score < 6:   level = RiskLevel.MODERATE
+    elif clamped_score < 7.5: level = RiskLevel.HIGH
+    elif clamped_score < 9:   level = RiskLevel.VERY_HIGH
+    else:                     level = RiskLevel.CRITICAL
+
+    return round(clamped_score, 2), level
+
+
+def get_outdoor_recommendation(aqi: float, persona: str) -> str:
+    """Return a clear outdoor activity recommendation string."""
+    rules = PERSONA_RULES.get(persona, PERSONA_RULES["general_population"])
+    thresholds = rules["aqi_thresholds"]
+
+    if aqi <= thresholds["safe_outdoor"]:
+        return "✅ Safe for outdoor activities. Air quality is acceptable for this group."
+    elif aqi <= thresholds["limit_outdoor"]:
+        return "⚠️ Limit strenuous outdoor activities. Short outings acceptable with precautions."
+    elif aqi <= thresholds["avoid_outdoor"]:
+        return "🚫 Avoid outdoor activities. Stay indoors when possible."
+    else:
+        return "🆘 DANGEROUS. Do not go outdoors. Seek medical advice if symptoms develop."
+
+
+def get_best_outdoor_time_recommendation(hourly_aqi: Dict[str, float], persona: str) -> str:
+    """
+    Given hourly AQI data (hour_str → aqi), recommend the safest outdoor time.
+    Used for queries like "best time to go outdoors for elderly".
+    """
+    if not hourly_aqi:
+        return "Insufficient data to determine optimal outdoor time."
+
+    rules = PERSONA_RULES.get(persona, PERSONA_RULES["general_population"])
+    safe_threshold = rules["aqi_thresholds"]["safe_outdoor"]
+    limit_threshold = rules["aqi_thresholds"]["limit_outdoor"]
+
+    safe_hours = [(h, aqi) for h, aqi in hourly_aqi.items() if aqi <= safe_threshold]
+    moderate_hours = [(h, aqi) for h, aqi in hourly_aqi.items() if safe_threshold < aqi <= limit_threshold]
+
+    if safe_hours:
+        best = sorted(safe_hours, key=lambda x: x[1])[:3]
+        hours_str = ", ".join(h for h, _ in best)
+        return f"✅ Best times for {rules['label']}: {hours_str} (AQI within safe range)."
+    elif moderate_hours:
+        best = sorted(moderate_hours, key=lambda x: x[1])[:3]
+        hours_str = ", ".join(h for h, _ in best)
+        return f"⚠️ Marginal outdoor window for {rules['label']}: {hours_str}. Keep it brief."
+    else:
+        return f"🚫 No safe outdoor window today for {rules['label']}. Recommend staying indoors all day."
+
+
+# ─── Compute per-hour risk scores for timeline (Feature 4) ────────────────────
+
+def compute_hourly_risk_scores(
+    hourly_data: List[Dict],
+    persona: str,
+    activity_level: str = "light",
+    environment: str = "outdoor",
+) -> List[Dict]:
+    """
+    Given a list of hourly readings (each with 'hour' or 'timestamp' and pollutant values),
+    compute risk scores per hour for a given persona.
+    Returns list of {hour, aqi, risk_score, risk_level, is_safe, is_marginal}.
+    """
+    results = []
+    rules = PERSONA_RULES.get(persona, PERSONA_RULES["general_population"])
+    safe = rules["aqi_thresholds"]["safe_outdoor"]
+    limit = rules["aqi_thresholds"]["limit_outdoor"]
+
+    for entry in hourly_data:
+        hour = entry.get("hour", entry.get("timestamp", "?"))
+        aqi_val = entry.get("aqi", 0)
+        polls = {
+            k: float(entry.get(k, 0) or 0)
+            for k in ["pm25", "pm10", "no2", "so2", "co", "o3"]
+        }
+
+        score, level = calculate_risk_score(
+            aqi=aqi_val, persona=persona, pollutants=polls,
+            exposure_hours=1.0,  # per-hour snapshot
+            activity_level=activity_level, environment=environment,
+        )
+
+        results.append({
+            "hour":       hour,
+            "aqi":        round(aqi_val, 1),
+            "risk_score": score,
+            "risk_level": level.value if hasattr(level, "value") else str(level),
+            "is_safe":    aqi_val <= safe,
+            "is_marginal": safe < aqi_val <= limit,
+        })
+
+    return results

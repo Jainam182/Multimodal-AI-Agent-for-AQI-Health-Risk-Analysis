@@ -1,0 +1,329 @@
+2026-04-15 17:42:45 | INFO     | data.vector_store:55 – ChromaDB initialized at ./data/chroma_db
+2026-04-15 17:42:46 | INFO     | agents.base_agent:39 – ▶ data_agent | id=0eac1db4
+2026-04-15 17:42:46 | INFO     | agents.data_agent:190 – DataAgent: city=Mumbai, mode=current
+2026-04-15 17:42:47 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Mumbai: {'pm25': 10.0, 'pm10': 15.0, 'co': 405.33, 'so2': 10.48, 'no2': 15.04, 'o3': 43.12}
+2026-04-15 17:42:47 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Mumbai
+2026-04-15 17:42:49 | INFO     | agents.data_agent:218 – WAQI bounds: 19 for Mumbai
+2026-04-15 17:42:50 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Mumbai: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'so2': 20.6, 'o3': 93.0, 'co': 0.468}
+2026-04-15 17:42:54 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 19/19 readings now have concentrations
+2026-04-15 17:42:54 | DEBUG    | data.database:153 – Saved 19 readings to DB
+2026-04-15 17:42:55 | INFO     | agents.base_agent:50 – ✔ data_agent done in 9822.5ms
+2026-04-15 17:42:56 | INFO     | agents.base_agent:39 – ▶ health_agent | id=8a614a06
+2026-04-15 17:42:56 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:42:56 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:42:56 | INFO     | agents.base_agent:50 – ✔ health_agent done in 145.2ms
+2026-04-15 17:42:57 | INFO     | agents.base_agent:39 – ▶ health_agent | id=f4f3a87e
+2026-04-15 17:42:57 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:42:57 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:42:57 | INFO     | agents.base_agent:50 – ✔ health_agent done in 149.6ms
+2026-04-15 17:42:59 | INFO     | agents.base_agent:39 – ▶ health_agent | id=3767fc27
+2026-04-15 17:42:59 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:42:59 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:42:59 | INFO     | agents.base_agent:50 – ✔ health_agent done in 295.9ms
+2026-04-15 17:43:16 | INFO     | agents.base_agent:39 – ▶ health_agent | id=af6b4e7a
+2026-04-15 17:43:16 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:43:16 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:43:16 | INFO     | agents.base_agent:50 – ✔ health_agent done in 105.2ms
+2026-04-15 17:44:25 | INFO     | agents.base_agent:39 – ▶ health_agent | id=309e9741
+2026-04-15 17:44:25 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:44:25 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:44:26 | INFO     | agents.base_agent:50 – ✔ health_agent done in 144.8ms
+2026-04-15 17:44:26 | INFO     | agents.reasoning_agent:222 – Query: 'What is the AQI in Mumbai?' | cities=['Mumbai'] | persona=General Population | activity=light | env=outdoor
+2026-04-15 17:44:26 | INFO     | agents.base_agent:39 – ▶ data_agent | id=f783a8a6
+2026-04-15 17:44:26 | INFO     | agents.data_agent:190 – DataAgent: city=Mumbai, mode=current
+2026-04-15 17:44:28 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Mumbai: {'pm25': 10.0, 'pm10': 15.0, 'co': 405.33, 'so2': 10.48, 'no2': 15.04, 'o3': 43.12}
+2026-04-15 17:44:28 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Mumbai
+2026-04-15 17:44:29 | INFO     | agents.data_agent:218 – WAQI bounds: 19 for Mumbai
+2026-04-15 17:44:31 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Mumbai: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'so2': 20.6, 'o3': 93.0, 'co': 0.468}
+2026-04-15 17:44:40 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 19/19 readings now have concentrations
+2026-04-15 17:44:40 | DEBUG    | data.database:153 – Saved 19 readings to DB
+2026-04-15 17:44:41 | INFO     | agents.base_agent:50 – ✔ data_agent done in 15427.7ms
+2026-04-15 17:44:46 | INFO     | agents.base_agent:39 – ▶ health_agent | id=c452d8e0
+2026-04-15 17:44:46 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:44:46 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:44:46 | INFO     | agents.base_agent:50 – ✔ health_agent done in 104.0ms
+2026-04-15 17:45:39 | INFO     | agents.base_agent:39 – ▶ data_agent | id=5c76419f
+2026-04-15 17:45:39 | INFO     | agents.data_agent:190 – DataAgent: city=Mumbai, mode=current
+2026-04-15 17:45:42 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Mumbai: {'pm25': 10.0, 'pm10': 15.0, 'co': 405.33, 'so2': 10.48, 'no2': 15.04, 'o3': 43.12}
+2026-04-15 17:45:42 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Mumbai
+2026-04-15 17:45:44 | INFO     | agents.data_agent:218 – WAQI bounds: 19 for Mumbai
+2026-04-15 17:45:54 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Mumbai: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'so2': 20.6, 'o3': 93.0, 'co': 0.468}
+2026-04-15 17:45:58 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 19/19 readings now have concentrations
+2026-04-15 17:45:58 | DEBUG    | data.database:153 – Saved 19 readings to DB
+2026-04-15 17:45:58 | INFO     | agents.base_agent:50 – ✔ data_agent done in 19568.8ms
+2026-04-15 17:45:59 | INFO     | agents.base_agent:39 – ▶ health_agent | id=ece928f0
+2026-04-15 17:45:59 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:45:59 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:45:59 | INFO     | agents.base_agent:50 – ✔ health_agent done in 115.6ms
+2026-04-15 17:45:59 | INFO     | agents.reasoning_agent:222 – Query: 'Compare AQI of Mumbai Delhi and Chennai and tell me which one's severe and what measure to take to ensure my safety' | cities=['Mumbai', 'Delhi', 'Chennai'] | persona=General Population | activity=light | env=outdoor
+2026-04-15 17:45:59 | INFO     | agents.base_agent:39 – ▶ data_agent | id=8e5f3e19
+2026-04-15 17:45:59 | INFO     | agents.data_agent:190 – DataAgent: city=Mumbai, mode=current
+2026-04-15 17:45:59 | INFO     | agents.base_agent:39 – ▶ health_agent | id=c0fe09b2
+2026-04-15 17:45:59 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:45:59 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:45:59 | INFO     | agents.base_agent:50 – ✔ health_agent done in 119.5ms
+2026-04-15 17:46:00 | INFO     | agents.base_agent:39 – ▶ health_agent | id=e6811b44
+2026-04-15 17:46:00 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:46:00 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:46:00 | INFO     | agents.base_agent:50 – ✔ health_agent done in 132.9ms
+2026-04-15 17:46:01 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Mumbai: {'pm25': 10.0, 'pm10': 15.0, 'co': 405.33, 'so2': 10.48, 'no2': 15.04, 'o3': 43.12}
+2026-04-15 17:46:01 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Mumbai
+2026-04-15 17:46:02 | INFO     | agents.data_agent:218 – WAQI bounds: 19 for Mumbai
+2026-04-15 17:46:02 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Mumbai: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'so2': 20.6, 'o3': 93.0, 'co': 0.468}
+2026-04-15 17:46:41 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 19/19 readings now have concentrations
+2026-04-15 17:46:41 | DEBUG    | data.database:153 – Saved 19 readings to DB
+2026-04-15 17:46:42 | INFO     | agents.base_agent:50 – ✔ data_agent done in 43361.8ms
+2026-04-15 17:46:42 | INFO     | agents.base_agent:39 – ▶ health_agent | id=b9ee8b8e
+2026-04-15 17:46:42 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:46:42 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.387, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:46:42 | INFO     | agents.base_agent:50 – ✔ health_agent done in 118.8ms
+2026-04-15 17:46:42 | INFO     | agents.base_agent:39 – ▶ data_agent | id=287223d0
+2026-04-15 17:46:42 | INFO     | agents.data_agent:190 – DataAgent: city=Delhi, mode=current
+2026-04-15 17:46:44 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Delhi: {'pm25': 15.0, 'pm10': 19.0, 'co': 424.8, 'so2': 5.24, 'no2': 15.04, 'o3': 62.72}
+2026-04-15 17:46:44 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Delhi
+2026-04-15 17:46:46 | INFO     | agents.data_agent:218 – WAQI bounds: 45 for Delhi
+2026-04-15 17:46:46 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Delhi: {'pm25': 112.9, 'pm10': 586.7, 'no2': 67.7, 'so2': 26.5, 'o3': 21.0, 'co': 0.541}
+2026-04-15 17:46:47 | INFO     | agents.base_agent:39 – ▶ health_agent | id=063db2c9
+2026-04-15 17:46:47 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:46:47 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:46:48 | INFO     | agents.base_agent:50 – ✔ health_agent done in 96.3ms
+2026-04-15 17:46:48 | INFO     | agents.reasoning_agent:222 – Query: 'Compare AQI of Delhi and Chennai and tell me the effect it would have on Children' | cities=['Delhi', 'Chennai'] | persona=Children | activity=light | env=outdoor
+2026-04-15 17:46:48 | INFO     | agents.base_agent:39 – ▶ data_agent | id=44b3fcc9
+2026-04-15 17:46:48 | INFO     | agents.data_agent:190 – DataAgent: city=Delhi, mode=current
+2026-04-15 17:46:50 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Delhi: {'pm25': 15.0, 'pm10': 19.0, 'co': 424.8, 'so2': 5.24, 'no2': 15.04, 'o3': 62.72}
+2026-04-15 17:46:50 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Delhi
+2026-04-15 17:46:50 | INFO     | agents.data_agent:218 – WAQI bounds: 45 for Delhi
+2026-04-15 17:46:51 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Delhi: {'pm25': 112.9, 'pm10': 586.7, 'no2': 67.7, 'so2': 26.5, 'o3': 21.0, 'co': 0.541}
+2026-04-15 17:47:06 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 45/45 readings now have concentrations
+2026-04-15 17:47:06 | DEBUG    | data.database:153 – Saved 45 readings to DB
+2026-04-15 17:47:07 | INFO     | agents.base_agent:50 – ✔ data_agent done in 24830.2ms
+2026-04-15 17:47:07 | INFO     | agents.base_agent:39 – ▶ health_agent | id=3ff12d7f
+2026-04-15 17:47:07 | INFO     | agents.health_agent:81 – HealthAgent: city=Delhi, AQI=80.0, persona=General Population
+2026-04-15 17:47:07 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 112.9, 'pm10': 586.7, 'no2': 67.7, 'co': 0.574, 'so2': 26.5, 'o3': 21.0}
+2026-04-15 17:47:07 | INFO     | agents.base_agent:50 – ✔ health_agent done in 116.9ms
+2026-04-15 17:47:07 | INFO     | agents.base_agent:39 – ▶ data_agent | id=5a5d5949
+2026-04-15 17:47:07 | INFO     | agents.data_agent:190 – DataAgent: city=Chennai, mode=current
+2026-04-15 17:47:23 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 45/45 readings now have concentrations
+2026-04-15 17:47:23 | DEBUG    | data.database:153 – Saved 45 readings to DB
+2026-04-15 17:47:24 | INFO     | agents.base_agent:50 – ✔ data_agent done in 35906.8ms
+2026-04-15 17:47:24 | INFO     | agents.base_agent:39 – ▶ health_agent | id=0e02f8d8
+2026-04-15 17:47:24 | INFO     | agents.health_agent:81 – HealthAgent: city=Delhi, AQI=80.0, persona=Children
+2026-04-15 17:47:24 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 112.9, 'pm10': 586.7, 'no2': 67.7, 'co': 0.574, 'so2': 26.5, 'o3': 21.0}
+2026-04-15 17:47:24 | INFO     | agents.base_agent:50 – ✔ health_agent done in 113.8ms
+2026-04-15 17:47:24 | INFO     | agents.base_agent:39 – ▶ data_agent | id=bfd3b9d0
+2026-04-15 17:47:24 | INFO     | agents.data_agent:190 – DataAgent: city=Chennai, mode=current
+2026-04-15 17:47:26 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Chennai: {'pm25': 14.0, 'pm10': 20.0, 'co': 436.25, 'so2': 5.24, 'no2': 9.4, 'o3': 52.92}
+2026-04-15 17:47:26 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Chennai
+2026-04-15 17:47:27 | INFO     | agents.data_agent:218 – WAQI bounds: 7 for Chennai
+2026-04-15 17:47:28 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Chennai: {'pm25': 8.9, 'pm10': 12.3, 'no2': 6.1, 'so2': 2.7, 'o3': 67.0, 'co': 0.162}
+2026-04-15 17:47:33 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Chennai: {'pm25': 14.0, 'pm10': 20.0, 'co': 436.25, 'so2': 5.24, 'no2': 9.4, 'o3': 52.92}
+2026-04-15 17:47:33 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Chennai
+2026-04-15 17:47:34 | INFO     | agents.data_agent:218 – WAQI bounds: 7 for Chennai
+2026-04-15 17:47:34 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Chennai: {'pm25': 8.9, 'pm10': 12.3, 'no2': 6.1, 'so2': 2.7, 'o3': 67.0, 'co': 0.162}
+2026-04-15 17:47:35 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 7/7 readings now have concentrations
+2026-04-15 17:47:35 | DEBUG    | data.database:153 – Saved 7 readings to DB
+2026-04-15 17:47:36 | INFO     | agents.base_agent:50 – ✔ data_agent done in 12089.0ms
+2026-04-15 17:47:36 | INFO     | agents.base_agent:39 – ▶ health_agent | id=0d4eb499
+2026-04-15 17:47:36 | INFO     | agents.health_agent:81 – HealthAgent: city=Chennai, AQI=56.0, persona=Children
+2026-04-15 17:47:36 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 8.9, 'pm10': 12.3, 'no2': 6.1, 'co': 0.162, 'so2': 2.7, 'o3': 67.0}
+2026-04-15 17:47:36 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 7/7 readings now have concentrations
+2026-04-15 17:47:36 | DEBUG    | data.database:153 – Saved 7 readings to DB
+2026-04-15 17:47:36 | INFO     | agents.base_agent:50 – ✔ health_agent done in 110.5ms
+2026-04-15 17:47:36 | INFO     | agents.base_agent:39 – ▶ health_agent | id=d2a82422
+2026-04-15 17:47:36 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:47:36 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:47:36 | INFO     | agents.base_agent:50 – ✔ health_agent done in 116.0ms
+2026-04-15 17:47:37 | INFO     | agents.base_agent:50 – ✔ data_agent done in 29577.8ms
+2026-04-15 17:47:37 | INFO     | agents.base_agent:39 – ▶ health_agent | id=1a6e53b1
+2026-04-15 17:47:37 | INFO     | agents.health_agent:81 – HealthAgent: city=Chennai, AQI=56.0, persona=General Population
+2026-04-15 17:47:37 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 8.9, 'pm10': 12.3, 'no2': 6.1, 'co': 0.162, 'so2': 2.7, 'o3': 67.0}
+2026-04-15 17:47:37 | INFO     | agents.base_agent:50 – ✔ health_agent done in 376.0ms
+2026-04-15 17:48:10 | INFO     | agents.base_agent:39 – ▶ data_agent | id=050cfecd
+2026-04-15 17:48:10 | INFO     | agents.data_agent:190 – DataAgent: city=Mumbai, mode=current
+2026-04-15 17:48:11 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Mumbai: {'pm25': 10.0, 'pm10': 15.0, 'co': 405.33, 'so2': 10.48, 'no2': 15.04, 'o3': 43.12}
+2026-04-15 17:48:11 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Mumbai
+2026-04-15 17:48:12 | INFO     | agents.data_agent:218 – WAQI bounds: 19 for Mumbai
+2026-04-15 17:48:12 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Mumbai: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'so2': 20.6, 'o3': 93.0, 'co': 0.468}
+2026-04-15 17:48:22 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 19/19 readings now have concentrations
+2026-04-15 17:48:22 | DEBUG    | data.database:153 – Saved 19 readings to DB
+2026-04-15 17:48:23 | INFO     | agents.base_agent:50 – ✔ data_agent done in 13233.5ms
+2026-04-15 17:48:23 | INFO     | agents.base_agent:39 – ▶ health_agent | id=4cdbcf60
+2026-04-15 17:48:23 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:48:23 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:48:24 | INFO     | agents.base_agent:50 – ✔ health_agent done in 139.1ms
+2026-04-15 17:48:24 | INFO     | agents.reasoning_agent:222 – Query: 'Which areas are most polluted in Mumbai?' | cities=['Mumbai'] | persona=General Population | activity=light | env=outdoor
+2026-04-15 17:48:24 | INFO     | agents.base_agent:39 – ▶ data_agent | id=da9e7595
+2026-04-15 17:48:24 | INFO     | agents.data_agent:190 – DataAgent: city=Mumbai, mode=current
+2026-04-15 17:48:24 | INFO     | agents.base_agent:39 – ▶ health_agent | id=0d1a85d2
+2026-04-15 17:48:24 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:48:24 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:48:24 | INFO     | agents.base_agent:50 – ✔ health_agent done in 135.3ms
+2026-04-15 17:48:25 | INFO     | agents.base_agent:39 – ▶ health_agent | id=dfb5cc84
+2026-04-15 17:48:25 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:48:25 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:48:25 | INFO     | agents.base_agent:50 – ✔ health_agent done in 481.7ms
+2026-04-15 17:48:30 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Mumbai: {'pm25': 10.0, 'pm10': 15.0, 'co': 405.33, 'so2': 10.48, 'no2': 15.04, 'o3': 43.12}
+2026-04-15 17:48:30 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Mumbai
+2026-04-15 17:48:30 | INFO     | agents.data_agent:218 – WAQI bounds: 19 for Mumbai
+2026-04-15 17:48:31 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Mumbai: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'so2': 20.6, 'o3': 93.0, 'co': 0.468}
+2026-04-15 17:48:31 | INFO     | agents.base_agent:39 – ▶ health_agent | id=93828dbd
+2026-04-15 17:48:31 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:48:31 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:48:31 | INFO     | agents.base_agent:50 – ✔ health_agent done in 144.9ms
+2026-04-15 17:48:31 | INFO     | agents.reasoning_agent:222 – Query: 'Which areas are most polluted in Mumbai?' | cities=['Mumbai'] | persona=General Population | activity=light | env=outdoor
+2026-04-15 17:48:31 | INFO     | agents.base_agent:39 – ▶ data_agent | id=6495a9a3
+2026-04-15 17:48:31 | INFO     | agents.data_agent:190 – DataAgent: city=Mumbai, mode=current
+2026-04-15 17:48:32 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Mumbai: {'pm25': 10.0, 'pm10': 15.0, 'co': 405.33, 'so2': 10.48, 'no2': 15.04, 'o3': 43.12}
+2026-04-15 17:48:32 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Mumbai
+2026-04-15 17:48:32 | INFO     | agents.data_agent:218 – WAQI bounds: 19 for Mumbai
+2026-04-15 17:48:33 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Mumbai: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'so2': 20.6, 'o3': 93.0, 'co': 0.468}
+2026-04-15 17:48:35 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 19/19 readings now have concentrations
+2026-04-15 17:48:35 | DEBUG    | data.database:153 – Saved 19 readings to DB
+2026-04-15 17:48:36 | INFO     | agents.base_agent:50 – ✔ data_agent done in 12050.4ms
+2026-04-15 17:48:37 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 19/19 readings now have concentrations
+2026-04-15 17:48:37 | DEBUG    | data.database:153 – Saved 19 readings to DB
+2026-04-15 17:48:38 | INFO     | agents.base_agent:50 – ✔ data_agent done in 7256.3ms
+2026-04-15 17:48:53 | INFO     | agents.base_agent:39 – ▶ health_agent | id=66fbf0a5
+2026-04-15 17:48:53 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:48:53 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:48:54 | INFO     | agents.base_agent:50 – ✔ health_agent done in 132.0ms
+2026-04-15 17:49:30 | INFO     | agents.base_agent:39 – ▶ health_agent | id=1d575f50
+2026-04-15 17:49:30 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:49:30 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:49:30 | INFO     | agents.base_agent:50 – ✔ health_agent done in 133.7ms
+2026-04-15 17:49:32 | INFO     | agents.base_agent:39 – ▶ health_agent | id=a39fbdcd
+2026-04-15 17:49:32 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:49:32 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:49:32 | INFO     | agents.base_agent:50 – ✔ health_agent done in 144.7ms
+2026-04-15 17:49:44 | INFO     | agents.base_agent:39 – ▶ health_agent | id=f8bee744
+2026-04-15 17:49:44 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:49:44 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:49:44 | INFO     | agents.base_agent:50 – ✔ health_agent done in 150.5ms
+2026-04-15 17:51:19 | INFO     | agents.base_agent:39 – ▶ data_agent | id=8bab54f3
+2026-04-15 17:51:19 | INFO     | agents.data_agent:190 – DataAgent: city=Mumbai, mode=current
+2026-04-15 17:51:19 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Mumbai: {'pm25': 10.0, 'pm10': 15.0, 'co': 405.33, 'so2': 10.48, 'no2': 15.04, 'o3': 43.12}
+2026-04-15 17:51:19 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Mumbai
+2026-04-15 17:51:20 | INFO     | agents.data_agent:218 – WAQI bounds: 19 for Mumbai
+2026-04-15 17:51:20 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Mumbai: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'so2': 20.6, 'o3': 93.0, 'co': 0.468}
+2026-04-15 17:51:23 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 19/19 readings now have concentrations
+2026-04-15 17:51:23 | DEBUG    | data.database:153 – Saved 19 readings to DB
+2026-04-15 17:51:24 | INFO     | agents.base_agent:50 – ✔ data_agent done in 5417.1ms
+2026-04-15 17:51:24 | INFO     | agents.base_agent:39 – ▶ health_agent | id=20d21a4e
+2026-04-15 17:51:24 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:51:24 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:51:24 | INFO     | agents.base_agent:50 – ✔ health_agent done in 126.5ms
+2026-04-15 17:51:25 | INFO     | agents.base_agent:39 – ▶ health_agent | id=50131d82
+2026-04-15 17:51:25 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:51:25 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:51:25 | INFO     | agents.base_agent:50 – ✔ health_agent done in 152.4ms
+2026-04-15 17:51:26 | INFO     | agents.base_agent:39 – ▶ health_agent | id=fbefb50d
+2026-04-15 17:51:26 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:51:26 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:51:26 | INFO     | agents.base_agent:50 – ✔ health_agent done in 145.9ms
+2026-04-15 17:52:26 | INFO     | agents.base_agent:39 – ▶ health_agent | id=fc1b73dd
+2026-04-15 17:52:26 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:52:26 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:52:26 | INFO     | agents.base_agent:50 – ✔ health_agent done in 140.4ms
+2026-04-15 17:52:27 | INFO     | agents.base_agent:39 – ▶ data_agent | id=b2b6c070
+2026-04-15 17:52:27 | INFO     | agents.data_agent:190 – DataAgent: city=Mumbai, mode=current
+2026-04-15 17:52:27 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Mumbai: {'pm25': 10.0, 'pm10': 15.0, 'co': 405.33, 'so2': 10.48, 'no2': 15.04, 'o3': 43.12}
+2026-04-15 17:52:27 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Mumbai
+2026-04-15 17:52:28 | INFO     | agents.data_agent:218 – WAQI bounds: 19 for Mumbai
+2026-04-15 17:52:29 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Mumbai: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'so2': 20.6, 'o3': 93.0, 'co': 0.468}
+2026-04-15 17:52:31 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 19/19 readings now have concentrations
+2026-04-15 17:52:31 | DEBUG    | data.database:153 – Saved 19 readings to DB
+2026-04-15 17:52:32 | INFO     | agents.base_agent:50 – ✔ data_agent done in 5347.1ms
+2026-04-15 17:52:32 | INFO     | agents.base_agent:39 – ▶ gis_agent | id=b2bc13d1
+2026-04-15 17:52:32 | INFO     | agents.gis_agent:111 – GISAgent: 19 stations, city=Mumbai
+2026-04-15 17:52:34 | INFO     | agents.base_agent:50 – ✔ gis_agent done in 2226.3ms
+2026-04-15 17:52:34 | INFO     | agents.base_agent:39 – ▶ visualization_agent | id=0e9e0ebb
+2026-04-15 17:52:35 | INFO     | agents.base_agent:50 – ✔ visualization_agent done in 452.1ms
+2026-04-15 17:53:37 | INFO     | agents.base_agent:39 – ▶ data_agent | id=36eace4e
+2026-04-15 17:53:37 | INFO     | agents.data_agent:190 – DataAgent: city=Mumbai, mode=current
+2026-04-15 17:53:38 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Mumbai: {'pm25': 10.0, 'pm10': 15.0, 'co': 405.33, 'so2': 10.48, 'no2': 15.04, 'o3': 43.12}
+2026-04-15 17:53:38 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Mumbai
+2026-04-15 17:53:39 | INFO     | agents.data_agent:218 – WAQI bounds: 19 for Mumbai
+2026-04-15 17:53:40 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Mumbai: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'so2': 20.6, 'o3': 93.0, 'co': 0.468}
+2026-04-15 17:53:43 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 19/19 readings now have concentrations
+2026-04-15 17:53:43 | DEBUG    | data.database:153 – Saved 19 readings to DB
+2026-04-15 17:53:44 | INFO     | agents.base_agent:50 – ✔ data_agent done in 7112.5ms
+2026-04-15 17:53:45 | INFO     | agents.base_agent:39 – ▶ health_agent | id=3e70d871
+2026-04-15 17:53:45 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:53:45 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:53:45 | INFO     | agents.base_agent:50 – ✔ health_agent done in 147.0ms
+2026-04-15 17:53:46 | INFO     | agents.base_agent:39 – ▶ health_agent | id=58269cbc
+2026-04-15 17:53:46 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:53:46 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:53:46 | INFO     | agents.base_agent:50 – ✔ health_agent done in 173.5ms
+2026-04-15 17:53:48 | INFO     | agents.base_agent:39 – ▶ health_agent | id=50ea5f3c
+2026-04-15 17:53:48 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:53:48 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:53:48 | INFO     | agents.base_agent:50 – ✔ health_agent done in 150.1ms
+2026-04-15 17:53:50 | INFO     | agents.base_agent:39 – ▶ health_agent | id=ecefc8da
+2026-04-15 17:53:50 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:53:50 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:53:51 | INFO     | agents.base_agent:50 – ✔ health_agent done in 147.6ms
+2026-04-15 17:53:51 | INFO     | agents.base_agent:39 – ▶ data_agent | id=c7349cd6
+2026-04-15 17:53:51 | INFO     | agents.data_agent:190 – DataAgent: city=Mumbai, mode=current
+2026-04-15 17:53:52 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Mumbai: {'pm25': 10.0, 'pm10': 15.0, 'co': 405.33, 'so2': 10.48, 'no2': 15.04, 'o3': 43.12}
+2026-04-15 17:53:52 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Mumbai
+2026-04-15 17:53:52 | INFO     | agents.data_agent:218 – WAQI bounds: 19 for Mumbai
+2026-04-15 17:53:52 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Mumbai: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'so2': 20.6, 'o3': 93.0, 'co': 0.468}
+2026-04-15 17:53:55 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 19/19 readings now have concentrations
+2026-04-15 17:53:55 | DEBUG    | data.database:153 – Saved 19 readings to DB
+2026-04-15 17:53:56 | INFO     | agents.base_agent:50 – ✔ data_agent done in 4704.5ms
+2026-04-15 17:53:56 | INFO     | agents.base_agent:39 – ▶ health_agent | id=fb5ecb13
+2026-04-15 17:53:56 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=Diabetic Patients
+2026-04-15 17:53:56 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:53:57 | INFO     | agents.base_agent:50 – ✔ health_agent done in 1496.0ms
+2026-04-15 17:53:57 | INFO     | agents.base_agent:39 – ▶ explanation_agent | id=2a5cfc2a
+2026-04-15 17:53:57 | INFO     | agents.explanation_agent:43 – ExplanationAgent: city=Mumbai, persona=Diabetic Patients, query='Health risk for Diabetic Patients in Mumbai with 8h exposure'
+2026-04-15 17:54:00 | INFO     | agents.base_agent:50 – ✔ explanation_agent done in 2705.1ms
+2026-04-15 17:55:37 | INFO     | agents.base_agent:39 – ▶ health_agent | id=36b5c094
+2026-04-15 17:55:38 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:55:38 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:55:38 | INFO     | agents.base_agent:50 – ✔ health_agent done in 421.4ms
+2026-04-15 17:56:28 | INFO     | agents.base_agent:39 – ▶ data_agent | id=265b93c5
+2026-04-15 17:56:28 | INFO     | agents.data_agent:190 – DataAgent: city=Mumbai, mode=current
+2026-04-15 17:56:29 | DEBUG    | agents.data_agent:336 – aqi.in city polls for Mumbai: {'pm25': 10.0, 'pm10': 15.0, 'co': 405.33, 'so2': 10.48, 'no2': 15.04, 'o3': 43.12}
+2026-04-15 17:56:29 | INFO     | agents.data_agent:340 – aqi.in: parsed 0 station rows for Mumbai
+2026-04-15 17:56:30 | INFO     | agents.data_agent:218 – WAQI bounds: 19 for Mumbai
+2026-04-15 17:56:30 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Mumbai: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'so2': 20.6, 'o3': 93.0, 'co': 0.468}
+2026-04-15 17:56:34 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 19/19 readings now have concentrations
+2026-04-15 17:56:34 | DEBUG    | data.database:153 – Saved 19 readings to DB
+2026-04-15 17:56:35 | INFO     | agents.base_agent:50 – ✔ data_agent done in 6329.6ms
+2026-04-15 17:56:35 | INFO     | agents.base_agent:39 – ▶ health_agent | id=a66107e8
+2026-04-15 17:56:35 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:56:35 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:56:35 | INFO     | agents.base_agent:50 – ✔ health_agent done in 126.8ms
+2026-04-15 17:56:36 | INFO     | agents.base_agent:39 – ▶ health_agent | id=4798d287
+2026-04-15 17:56:36 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:56:36 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:56:36 | INFO     | agents.base_agent:50 – ✔ health_agent done in 127.8ms
+2026-04-15 17:56:37 | INFO     | agents.base_agent:39 – ▶ health_agent | id=063a6aac
+2026-04-15 17:56:37 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:56:37 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:56:37 | INFO     | agents.base_agent:50 – ✔ health_agent done in 131.3ms
+2026-04-15 17:56:46 | INFO     | agents.base_agent:39 – ▶ health_agent | id=e05b3e57
+2026-04-15 17:56:46 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=70.0, persona=General Population
+2026-04-15 17:56:46 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.352, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:56:46 | INFO     | agents.base_agent:50 – ✔ health_agent done in 108.9ms
+2026-04-15 17:56:46 | INFO     | agents.base_agent:39 – ▶ data_agent | id=513ba851
+2026-04-15 17:56:46 | INFO     | agents.data_agent:190 – DataAgent: city=Mumbai, mode=current
+2026-04-15 17:56:47 | INFO     | agents.data_agent:198 – CSV: 91 readings
+2026-04-15 17:56:47 | INFO     | agents.data_agent:1072 – Open-Meteo city pollutants for Mumbai: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'so2': 20.6, 'o3': 93.0, 'co': 0.468}
+2026-04-15 17:56:47 | INFO     | agents.data_agent:1121 – Pollutant enrichment: 91/91 readings now have concentrations
+2026-04-15 17:56:47 | DEBUG    | data.database:153 – Saved 91 readings to DB
+2026-04-15 17:56:48 | INFO     | agents.base_agent:50 – ✔ data_agent done in 1272.3ms
+2026-04-15 17:56:48 | INFO     | agents.base_agent:39 – ▶ gis_agent | id=221894c7
+2026-04-15 17:56:48 | INFO     | agents.gis_agent:111 – GISAgent: 91 stations, city=Mumbai
+2026-04-15 17:56:48 | INFO     | agents.base_agent:50 – ✔ gis_agent done in 57.2ms
+2026-04-15 17:56:48 | INFO     | agents.base_agent:39 – ▶ health_agent | id=88e238cd
+2026-04-15 17:56:48 | INFO     | agents.health_agent:81 – HealthAgent: city=Mumbai, AQI=142.9, persona=all
+2026-04-15 17:56:48 | INFO     | agents.health_agent:82 – HealthAgent pollutants: {'pm25': 23.6, 'pm10': 33.6, 'no2': 13.9, 'co': 0.589, 'so2': 20.6, 'o3': 93.0}
+2026-04-15 17:56:49 | INFO     | agents.base_agent:50 – ✔ health_agent done in 1087.7ms
+2026-04-15 17:56:49 | INFO     | agents.base_agent:39 – ▶ visualization_agent | id=53a64755
+2026-04-15 17:56:49 | INFO     | agents.base_agent:50 – ✔ visualization_agent done in 126.2ms
+2026-04-15 17:56:49 | INFO     | agents.base_agent:39 – ▶ explanation_agent | id=5e465a68
+2026-04-15 17:56:49 | INFO     | agents.explanation_agent:43 – ExplanationAgent: city=Mumbai, persona=None, query='Full batch analysis for Mumbai'
+2026-04-15 17:56:52 | INFO     | agents.base_agent:50 – ✔ explanation_agent done in 2755.6ms
