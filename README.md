@@ -1,56 +1,196 @@
-# 🌫️ Multi-Agent AQI Health Risk Intelligence System
+---
+title: Multimodal AI Agent for AQI Health Risk Intelligence System
+emoji: 🌫️
+colorFrom: blue
+colorTo: green
+sdk: streamlit
+python_version: "3.11"
+app_file: app.py
+pinned: false
+---
+
+# 🌫️ Multimodal AI Agent for AQI Health Risk Intelligence System
 
 A production-grade **Multi-Agent AI platform** for real-time and historical AQI analysis, geospatial pollution mapping, and persona-aware health risk scoring — built for Indian cities, with Mumbai as the primary target.
 
 ---
 
-## Architecture Overview
+## Capstone Framing
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Streamlit UI (app.py)                    │
-│   Dashboard │ Ask Agent │ Trends │ GIS Map │ Health │ Batch     │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-              ┌──────────▼──────────┐
-              │   Reasoning Agent   │  ← LLM orchestrator
-              │  (central planner)  │    (Groq / OpenAI)
-              └──────┬──────────────┘
-                     │ coordinates
-         ┌───────────┼────────────────────────┐
-         │           │                        │
-   ┌─────▼────┐ ┌────▼─────┐ ┌──────────────▼──────┐
-   │  Data    │ │   GIS    │ │    Health Agent      │
-   │  Agent   │ │  Agent   │ │  (persona risk ×10)  │
-   └─────┬────┘ └────┬─────┘ └──────────────┬───────┘
-         │           │                       │
-   ┌─────▼───────────▼───────────────────────▼───────┐
-   │            Visualization Agent                   │
-   │    Folium maps │ Plotly charts │ Heatmaps        │
-   └────────────────────────┬────────────────────────┘
-                            │
-              ┌─────────────▼────────────┐
-              │     Explanation Agent    │
-              │  LLM narrative + RAG     │
-              └──────────────────────────┘
-```
+This project represents an advanced AI engineering capstone, moving beyond basic chat interfaces into a fully assembled multi-agent AI system. It incorporates structured state management, persistent memory (ChromaDB + SQLite), multi-layer fallback mechanisms, deterministic execution, and real-world data ingestion. 
 
-### Agent Responsibilities
+### Problem Statement
 
-| Agent | Role |
-|---|---|
-| **Reasoning Agent** | Interprets NL queries, plans steps, orchestrates agents, uses LLM function-calling |
-| **Data Agent** | WAQI → OpenWeather → scraping → CSV fallback; cleans, normalises, stores to SQLite + ChromaDB |
-| **GIS Agent** | DBSCAN clustering, hotspot detection, heatmap data, region comparison |
-| **Health Agent** | 10-persona risk scoring, pollutant health effects, AQI→symptom mapping |
-| **Visualization Agent** | Folium maps, Plotly trend/health/heatmap charts |
-| **Explanation Agent** | RAG-augmented LLM summaries, recommendations, alerts |
+Air quality monitoring systems face two opposing requirements:
+1. **Conversational flexibility** - Citizens want to ask free-form natural language questions ("Is it safe for my asthmatic child to go out in Bandra today?", "What are the AQI trends for PM2.5?").
+2. **Operational correctness** - Health risk scoring, pollutant calculations, and geospatial clustering must be exact, scientifically accurate, and deterministically grounded.
+
+A single LLM cannot satisfy both: it will hallucinate specific pollutant levels or miscalculate risk thresholds. This project solves that gap with a **hierarchical multi-agent graph** where each responsibility is isolated into specialized nodes.
+
+### Business Use Case
+
+The system acts as a comprehensive Health-Risk Intelligence Platform for Indian metropolitan areas. It supports multiple user journeys across a **6-tab Streamlit interface**:
+| Journey | Target Audience | Key Features |
+|---|---|---|
+| **Live Monitoring** | General Public | Real-time AQI metrics, Folium station maps, baseline health panel |
+| **Conversational AI** | Everyday Users | Natural language queries handled by a multi-agent orchestrator |
+| **Trend Analysis** | Researchers/Analysts | Historical time-series, multi-pollutant overlays, daily averages |
+| **Spatial Analysis** | City Planners | DBSCAN clustering, hotspot detection, heatmap overlays |
+| **Persona Health** | Sensitive Groups | 10-persona deep-dive risk scoring (e.g., Asthma, Elderly, Athletes) |
+
+### Technical Complexity
+
+| Dimension | What's hard | How it's solved |
+|---|---|---|
+| **Orchestration** | Complex user queries require data, GIS, health, and visualization steps | **Reasoning Agent + Orchestrator** plan steps and coordinate sub-agents |
+| **Data Resiliency** | Real-time API endpoints (WAQI, OpenWeather) can fail or hit rate limits | **5-layer fallback chain**: WAQI → OpenWeather → Scraping → CSV → Mock Data |
+| **Spatial Clustering** | Grouping nearby stations with varying pollution levels | **DBSCAN ML clustering** via the GIS Agent |
+| **Risk Scoring** | Generalized AQI does not reflect individual persona risks | Deterministic **Health Agent** with 10 specific persona thresholds |
+| **Contextual Memory** | LLMs lose track of specific station data during generation | **ChromaDB RAG pipeline** injects real-time data into the Explanation Agent |
 
 ---
 
-## Folder Structure
+## System Architecture
 
+### High Level System Architecture
+
+```mermaid
+flowchart TD
+    User([User])
+    UI[Streamlit UI<br/>app.py]
+    Orchestrator[Orchestrator<br/>agents/orchestrator.py]
+    Reasoning[Reasoning Agent<br/>agents/reasoning_agent.py]
+
+    subgraph Agents[Specialized Sub-Agents]
+        Data[Data Agent<br/>WAQI, OpenWeather, Scrapers]
+        GIS[GIS Agent<br/>Folium, DBSCAN]
+        Health[Health Agent<br/>Risk Scoring]
+        Vis[Visualization Agent<br/>Plotly]
+        Explain[Explanation Agent<br/>RAG + Narrative]
+    end
+
+    DB[(SQLite<br/>AQI Logs)]
+    Vector[(ChromaDB<br/>Embeddings)]
+
+    User -->|Interaction| UI
+    UI -->|Query / Event| Orchestrator
+    Orchestrator <--> Reasoning
+    Reasoning -->|Plan Execution| Agents
+    
+    Data <--> DB
+    Data --> Vector
+    Explain <--> Vector
+    
+    Agents -->|Structured Output| Orchestrator
+    Orchestrator -->|Final Response| UI
+    UI --> User
 ```
+
+### Agent Workflow
+
+```mermaid
+flowchart LR
+    Q[User Query] --> Orch[Orchestrator]
+    Orch --> Reason[Reasoning Agent]
+    
+    Reason -->|Plan Generation| Step1[Determine Requirements]
+    
+    Step1 -->|Data Needed| D[Data Agent]
+    Step1 -->|Spatial Query| G[GIS Agent]
+    Step1 -->|Health Query| H[Health Agent]
+    Step1 -->|Visual Query| V[Visualization Agent]
+    
+    D --> E[Explanation Agent]
+    G --> E
+    H --> E
+    V --> E
+    
+    E -->|Narrative Generation| Out[Final Response]
+```
+
+---
+
+## Pipeline Overview
+
+End-to-end lifecycle of a complex user query (e.g., "Show me AQI trends in Mumbai and the risk for asthma patients"):
+
+```mermaid
+flowchart LR
+    A[1. User Types Query] --> B[2. Orchestrator Receives]
+    B --> C[3. Reasoning Agent Plans]
+    C --> D[4. Data Agent Fetches WAQI/DB]
+    D --> E[5. Health Agent Calculates Score]
+    E --> F[6. Vis Agent Generates Chart]
+    F --> G[7. Explain Agent Summarizes via RAG]
+    G --> H[8. Orchestrator Merges]
+    H --> I[9. UI Renders Response]
+```
+
+---
+
+## Agent Responsibilities & Data Flow
+
+All agents communicate via a unified Pydantic JSON schema (`AgentMessage`), ensuring structured data handoffs instead of prompt-based string parsing.
+
+```mermaid
+flowchart LR
+    subgraph Input
+        U[Streamlit Event]
+    end
+
+    subgraph Memory
+        DB[(SQLite)]
+        CHROMA[(ChromaDB)]
+    end
+
+    subgraph Agents
+        REAS[Reasoning<br/>LLM Planner]
+        DAT[Data<br/>Ingestion]
+        GIS[GIS<br/>Spatial]
+        HLT[Health<br/>Risk Engine]
+        VIS[Visualization<br/>Charts]
+        EXP[Explanation<br/>Narrative]
+    end
+
+    U --> REAS
+    REAS --> DAT
+    DAT --> DB
+    DAT --> CHROMA
+    REAS --> GIS
+    REAS --> HLT
+    REAS --> VIS
+    DAT -.-> GIS
+    DAT -.-> HLT
+    HLT -.-> VIS
+    CHROMA --> EXP
+    VIS --> EXP
+    EXP --> U
+```
+
+---
+
+## Technology Stack
+
+| Layer | Technology | Version | Role |
+|---|---|---|---|
+| Language | Python | 3.11+ | Runtime |
+| UI | Streamlit, streamlit-folium | 1.30+ | Interactive Dashboard & Chat |
+| Agent Orchestration | Custom Framework | - | Structured JSON Messaging |
+| LLM Integration | Groq, OpenAI | - | High-speed inference |
+| Geospatial & Charts | Folium, Plotly, GeoPandas | - | Map & Chart Generation |
+| Machine Learning | scikit-learn | - | DBSCAN Spatial Clustering |
+| Relational DB | SQLAlchemy + SQLite | 2.0+ | Telemetry & Fallback Data |
+| Vector DB | ChromaDB | - | RAG Document Store |
+| Embeddings | sentence-transformers | - | `all-MiniLM-L6-v2` |
+| Data Processing | pandas, NumPy | - | Aggregations |
+| Network & Scraping| aiohttp, requests, BS4 | - | API & Web Scraping |
+| Env Config | python-dotenv | - | Loads `.env` |
+
+---
+
+## Project Structure
+
+```text
 aqi_multiagent/
 ├── app.py                    # Streamlit UI (6 tabs)
 ├── config.py                 # AQI categories, personas, city coords
@@ -59,7 +199,8 @@ aqi_multiagent/
 │
 ├── agents/
 │   ├── base_agent.py         # Abstract base with timing + DB logging
-│   ├── reasoning_agent.py    # Orchestrator, LLM planner
+│   ├── orchestrator.py       # Main system orchestrator
+│   ├── reasoning_agent.py    # LLM planner
 │   ├── data_agent.py         # Data ingestion + fallback chain
 │   ├── gis_agent.py          # Spatial analysis + DBSCAN
 │   ├── health_agent.py       # Persona risk engine
@@ -90,106 +231,40 @@ aqi_multiagent/
 
 ---
 
-## Quick Start
+## Application Flow (Streamlit UI)
 
-### 1. Clone & Install
+```mermaid
+sequenceDiagram
+    participant User
+    participant Streamlit
+    participant Orchestrator
+    participant SubAgents as Specialized Agents
+    participant External as APIs / DB
 
-```bash
-git clone <your-repo>
-cd aqi_multiagent
-python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+    User->>Streamlit: Submit Query
+    Streamlit->>Streamlit: Render Spinner
+    Streamlit->>Orchestrator: process_query()
+    Orchestrator->>SubAgents: Reasoning Agent (Plan)
+    SubAgents-->>Orchestrator: Execution Plan
+    Orchestrator->>SubAgents: Trigger Data Agent
+    SubAgents->>External: Fetch WAQI/OpenWeather
+    External-->>SubAgents: JSON Payload
+    SubAgents->>SubAgents: Transform & Load to DB
+    Orchestrator->>SubAgents: Trigger Health/GIS/Vis
+    SubAgents-->>Orchestrator: Structured Data & Artifacts
+    Orchestrator->>SubAgents: Trigger Explanation (RAG)
+    SubAgents-->>Orchestrator: Narrative Markdown
+    Orchestrator-->>Streamlit: Final Response Payload
+    Streamlit->>User: Render Chat UI (Text + Charts)
 ```
-
-### 2. Configure Environment
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env`:
-
-```env
-# LLM (at least one required for AI explanations)
-GROQ_API_KEY=gsk_...           # https://console.groq.com
-OPENAI_API_KEY=sk-...          # Optional fallback
-
-# AQI Data APIs (optional — system works without them using mock data)
-WAQI_API_KEY=your_waqi_key     # https://aqicn.org/api/
-OPENWEATHER_API_KEY=...        # https://openweathermap.org/api
-
-# Choose LLM provider
-LLM_PROVIDER=groq              # or: openai
-
-# Storage paths
-DB_PATH=data/db/aqi.db
-CHROMA_PATH=data/chroma
-```
-
-### 3. Launch
-
-```bash
-streamlit run app.py
-```
-
-Opens at `http://localhost:8501`
-
----
-
-## Features
-
-### Dashboard Tab
-- Live AQI metrics for selected city
-- Interactive Folium station map
-- Health risk panel for selected persona
-- All-persona risk bar chart
-- Station detail table with colour-coded AQI
-
-### Ask Agent Tab
-- Natural language queries to the full multi-agent pipeline
-- Suggested quick-queries
-- Chat history with structured responses (maps, charts, health data)
-- Example queries:
-  - *"Show AQI trends in Mumbai"*
-  - *"Which areas are dangerous for asthma patients?"*
-  - *"What is the best time to go outdoors for an elderly person?"*
-  - *"Detect pollution hotspots"*
-
-### Trends Tab
-- Historical AQI time-series (7–90 days)
-- Multi-pollutant overlay (PM2.5, PM10, NO₂, SO₂, CO, O₃)
-- AQI category background bands
-- Daily averages table
-- Station-level filtering
-
-### GIS Map Tab
-- DBSCAN spatial clustering
-- Heatmap overlay
-- Hotspot identification
-- Cluster summary with worst pollutant
-
-### Health Analysis Tab
-- 10-persona deep-dive:
-  - Children, Elderly, Asthma, COPD, Heart, Athletes, Outdoor Workers, Pregnant Women, Diabetic Patients, General Population
-- Risk score gauge (0–10)
-- Symptom list, short/long-term impacts
-- Preventive action checklist
-- Outdoor activity recommendation
-- Pollutant health notes
-- Danger zone table
-
-### Batch Analysis Tab
-- Upload any CSV with AQI/pollutant columns
-- Full pipeline run (all 5 agents)
-- Progress bar with live step feedback
-- Downloadable JSON report
 
 ---
 
 ## Data Sources & Fallback Chain
 
-```
+The system is designed with a highly resilient **5-layer data ingestion fallback chain** to ensure 100% uptime:
+
+```text
 1. WAQI API (primary)          — aqicn.org/api/
 2. OpenWeather Air Pollution   — openweathermap.org/api/air-pollution
 3. Web scraping                — aqi.in, waqi.info
@@ -197,13 +272,61 @@ Opens at `http://localhost:8501`
 5. Mock data                   — realistic Mumbai profile (always available)
 ```
 
-The system **never fails** — it gracefully degrades through the fallback chain.
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Python **3.11+**
+- API keys for LLM (Groq or OpenAI)
+- (Optional) API keys for WAQI and OpenWeather
+
+### Quick Start
+
+```bash
+# 1. Clone
+git clone <your-repo>
+cd Multimodal-AI-Agent-for-AQI-Health-Risk-Analysis-main
+
+# 2. Virtualenv
+python -m venv venv
+source venv/bin/activate            # Windows: venv\Scripts\activate
+
+# 3. Dependencies
+pip install -r requirements.txt
+
+# 4. Configuration
+cp .env.example .env
+# Edit .env and set your API keys
+
+# 5. Launch
+streamlit run app.py
+```
+
+Opens locally at `http://localhost:8501`.
 
 ---
 
-## Agent Communication (JSON Schema)
+## Configuration
 
-All agents communicate via `AgentMessage`:
+All configuration is environment-driven. Edit `.env` to set your credentials.
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `GROQ_API_KEY` | Yes* | Ultra-fast LLM inference (*or OpenAI) |
+| `OPENAI_API_KEY` | Yes* | Fallback LLM inference (*or Groq) |
+| `WAQI_API_KEY` | No | Primary data source |
+| `OPENWEATHER_API_KEY`| No | Secondary data source |
+| `LLM_PROVIDER` | Yes | `groq` or `openai` |
+| `DB_PATH` | No | Defaults to `data/db/aqi.db` |
+| `CHROMA_PATH` | No | Defaults to `data/chroma` |
+
+---
+
+## Agent Communication Protocol
+
+All agents exchange data using a strictly typed Pydantic model (`AgentMessage`). This prevents prompt parsing errors and ensures determinism.
 
 ```json
 {
@@ -221,57 +344,19 @@ All agents communicate via `AgentMessage`:
 }
 ```
 
-### Example Health Output
-
-```json
-{
-  "persona_risks": {
-    "asthma_patients": {
-      "risk_score": 7.8,
-      "risk_level": "High",
-      "symptoms": ["Wheezing", "Chest tightness", "Shortness of breath"],
-      "outdoor_recommendation": "Avoid outdoor activity. Stay indoors with air purifier.",
-      "preventive_actions": ["Use prescribed inhaler", "Wear N95 mask", "Avoid traffic zones"],
-      "short_term_note": "Immediate bronchospasm risk with PM2.5 > 60 µg/m³",
-      "long_term_note": "Chronic exposure accelerates lung function decline"
-    }
-  },
-  "alert_triggered": true,
-  "alert_message": "AQI 287 — Hazardous for sensitive groups",
-  "pollutant_notes": [
-    { "pollutant": "pm25", "value": 89.3, "unit": "µg/m³", "health_note": "5.9× WHO limit — high cardiovascular risk" }
-  ]
-}
-```
-
 ---
 
-## AQI Categories (India CPCB)
+## Testing & Resiliency
 
-| Range | Category | Colour |
-|---|---|---|
-| 0–50 | Good | 🟢 |
-| 51–100 | Satisfactory | 🟡 |
-| 101–200 | Moderate | 🟠 |
-| 201–300 | Poor | 🔴 |
-| 301–400 | Very Poor | 🟣 |
-| 401–500 | Severe | ⚫ |
+- **Tenacity Retries:** Network calls to external APIs are wrapped with exponential backoff.
+- **Pydantic Validation:** All incoming external data is validated against strict schemas before DB insertion.
+- **Loguru Tracing:** Every agent handoff, data extraction, and tool execution is logged for observability.
 
 ---
 
 ## Deployment
 
-### Docker
-
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-EXPOSE 8501
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
-```
+### Docker Deployment
 
 ```bash
 docker build -t aqi-system .
@@ -279,73 +364,34 @@ docker run -p 8501:8501 --env-file .env aqi-system
 ```
 
 ### Streamlit Cloud
-
-1. Push to GitHub
-2. Connect at [share.streamlit.io](https://share.streamlit.io)
-3. Set secrets from `.env.example` in the Streamlit Cloud secrets panel
-4. Deploy
+1. Push your repository to GitHub.
+2. Connect to [share.streamlit.io](https://share.streamlit.io).
+3. Set your secrets from `.env.example` in the Streamlit Cloud advanced settings.
+4. Deploy!
 
 ### Production Hardening
-
-- **Rate limiting**: Add Redis-based rate limiting on API calls
-- **Caching**: Cache WAQI responses for 15 minutes with `@st.cache_data(ttl=900)`
-- **Auth**: Add `streamlit-authenticator` for multi-user support
-- **Monitoring**: Integrate Loguru → ELK stack or Datadog
-- **Scaling**: Replace SQLite with PostgreSQL for multi-user concurrent writes
-- **Vector DB**: Replace ChromaDB with Pinecone or Weaviate for production scale
-- **Async**: Move agent orchestration to FastAPI + Celery for background tasks
+- **Rate limiting**: Add Redis-based rate limiting on API calls.
+- **Caching**: Implement `@st.cache_data` for static UI elements.
+- **Scaling**: Replace SQLite with PostgreSQL and ChromaDB with Pinecone.
 
 ---
 
-## Optional FastAPI Backend
+## Roadmap
 
-```bash
-# If you want a REST API layer:
-uvicorn api.main:app --reload --port 8000
-```
-
-Endpoints:
-- `POST /api/analyze` — full pipeline run
-- `GET /api/aqi/{city}` — latest readings
-- `GET /api/health/{city}/{persona}` — risk scores
-- `GET /api/health` — system health check
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| UI | Streamlit, streamlit-folium |
-| Agents | Python 3.11, custom agent framework |
-| LLM | Groq (openai/gpt-oss-120b), OpenAI (gpt-4o-mini) |
-| Geospatial | Folium, GeoPandas |
-| Charts | Plotly |
-| ML | scikit-learn (DBSCAN) |
-| Storage | SQLite (SQLAlchemy), ChromaDB |
-| Embeddings | sentence-transformers (all-MiniLM-L6-v2) |
-| Data | pandas, NumPy |
-| HTTP | aiohttp, requests, BeautifulSoup4 |
-| Logging | Loguru |
-| Retries | Tenacity |
-| Validation | Pydantic v2 |
-
----
-
-## Research & Portfolio Notes
-
-This system demonstrates:
-- **Multi-agent orchestration** with structured JSON communication
-- **RAG pipeline** (ChromaDB + sentence-transformers + LLM)
-- **Health domain expertise** encoded as deterministic rules (not hallucinated by LLM)
-- **Geospatial ML** (DBSCAN clustering on pollution data)
-- **Graceful degradation** through a 5-layer data fallback chain
-- **Production patterns**: retry logic, structured logging, DB persistence, schema validation
-
-Suitable as a **portfolio project** or foundation for a **startup-grade environmental health product**.
+- Transition from SQLite to PostgreSQL for concurrent writes.
+- Implement streaming tokens for the Explanation Agent in the Streamlit UI.
+- Expand persona configurations to include dynamic thresholds based on specific user health records.
+- Integrate a dedicated Alerting system for SMS/Email notifications on Severe AQI breaches.
+- Optional FastAPI Backend integration for Headless API execution.
 
 ---
 
 ## License
 
 MIT License — see `LICENSE` for details.
+
+---
+
+<div align="center">
+  <sub>Built as a Multimodal AI Agent for Environmental Health Intelligence</sub>
+</div>
