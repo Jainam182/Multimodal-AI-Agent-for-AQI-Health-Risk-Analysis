@@ -1,5 +1,5 @@
 ---
-title: Multimodal AI Agent for AQI Health Risk Intelligence System
+title: Multi-Agent AQI Health Risk Intelligence System
 emoji: 🌫️
 colorFrom: blue
 colorTo: green
@@ -9,15 +9,15 @@ app_file: app.py
 pinned: false
 ---
 
-# 🌫️ Multimodal AI Agent for AQI Health Risk Intelligence System
+# 🌫️ Multi-Agent AQI Health Risk Intelligence System
 
-A production-grade **Multi-Agent AI platform** for real-time and historical AQI analysis, geospatial pollution mapping, and persona-aware health risk scoring — built for Indian cities, with Mumbai as the primary target.
+A **Multi-Agent AI platform** for real-time and historical AQI analysis, geospatial pollution mapping, and persona-aware health risk scoring — built for Indian cities, with Mumbai as the primary target. Developed as a Bachelor of Engineering (BE) Final Year Project.
 
 ---
 
-## Capstone Framing
+## Project Motivation (BE Final Year Project)
 
-This project represents an advanced AI engineering capstone, moving beyond basic chat interfaces into a fully assembled multi-agent AI system. It incorporates structured state management, persistent memory (ChromaDB + SQLite), multi-layer fallback mechanisms, deterministic execution, and real-world data ingestion. 
+This project represents a comprehensive final year engineering effort, moving beyond basic chat interfaces into a fully assembled multi-agent AI system. It incorporates structured state management, persistent memory (ChromaDB + SQLite), multi-layer fallback mechanisms, deterministic execution, and real-world data ingestion to showcase advanced software engineering and AI integration concepts.
 
 ### Problem Statement
 
@@ -27,9 +27,9 @@ Air quality monitoring systems face two opposing requirements:
 
 A single LLM cannot satisfy both: it will hallucinate specific pollutant levels or miscalculate risk thresholds. This project solves that gap with a **hierarchical multi-agent graph** where each responsibility is isolated into specialized nodes.
 
-### Business Use Case
+### Project Objectives & Use Cases
 
-The system acts as a comprehensive Health-Risk Intelligence Platform for Indian metropolitan areas. It supports multiple user journeys across a **6-tab Streamlit interface**:
+The system is designed as a comprehensive Health-Risk Intelligence Platform for Indian metropolitan areas. It supports multiple user journeys across a **6-tab Streamlit interface**:
 | Journey | Target Audience | Key Features |
 |---|---|---|
 | **Live Monitoring** | General Public | Real-time AQI metrics, Folium station maps, baseline health panel |
@@ -262,7 +262,7 @@ sequenceDiagram
 
 ## Data Sources & Fallback Chain
 
-The system is designed with a highly resilient **5-layer data ingestion fallback chain** to ensure 100% uptime:
+The system is designed with a highly resilient **5-layer data ingestion fallback chain**:
 
 ```text
 1. WAQI API (primary)          — aqicn.org/api/
@@ -369,11 +369,6 @@ docker run -p 8501:8501 --env-file .env aqi-system
 3. Set your secrets from `.env.example` in the Streamlit Cloud advanced settings.
 4. Deploy!
 
-### Production Hardening
-- **Rate limiting**: Add Redis-based rate limiting on API calls.
-- **Caching**: Implement `@st.cache_data` for static UI elements.
-- **Scaling**: Replace SQLite with PostgreSQL and ChromaDB with Pinecone.
-
 ---
 
 ## Roadmap
@@ -393,5 +388,5 @@ MIT License — see `LICENSE` for details.
 ---
 
 <div align="center">
-  <sub>Built as a Multimodal AI Agent for Environmental Health Intelligence</sub>
+  <sub>Built as a Multimodal AI Agent for Environmental Health Intelligence - Final Year BE Project</sub>
 </div>
