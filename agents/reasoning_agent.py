@@ -274,7 +274,8 @@ class ReasoningAgent(BaseAgent):
                 health_p = health_out.payload if health_out else {}
 
                 # Extract risk level from persona_risks (correct path)
-                persona_key = persona.lower().replace(" ", "_")
+                from tools.health_tools import resolve_persona_key
+                persona_key = resolve_persona_key(persona)
                 persona_risks = health_p.get("persona_risks", {})
                 risk_info = persona_risks.get(persona_key, {})
                 if not risk_info and persona_risks:
@@ -364,11 +365,16 @@ class ReasoningAgent(BaseAgent):
         pollutant = None
         area_name = None
 
+        # Per-stage timing — lets us see which agent dominates wall time.
+        t_stage = time.perf_counter()
+
         if "data_agent" in agents_needed:
             mode = "historical" if intent == "trend_query" else "current"
             data_out = self._data_agent.run(
             city=city, mode=mode, uploaded_df=uploaded_df
         )
+        t_data = (time.perf_counter() - t_stage) * 1000
+        t_stage = time.perf_counter()
 
         if "health_agent" in agents_needed and data_out:
             health_out = self._health_agent.run(
@@ -379,6 +385,9 @@ class ReasoningAgent(BaseAgent):
             activity_level=activity_level,
             environment=environment,
         )
+
+        t_health = (time.perf_counter() - t_stage) * 1000
+        t_stage = time.perf_counter()
 
         if "gis_agent" in agents_needed and data_out:
             radius = self._extract_radius(query) or 3.0
@@ -391,6 +400,8 @@ class ReasoningAgent(BaseAgent):
             radius_km=radius,
             area_name=area_name,
         )
+        t_gis = (time.perf_counter() - t_stage) * 1000
+        t_stage = time.perf_counter()
 
         data_p   = data_out.payload   if data_out   else {}
         health_p = health_out.payload if health_out else {}
@@ -404,6 +415,8 @@ class ReasoningAgent(BaseAgent):
         health_payload=health_p,
         gis_payload=gis_p,
         )
+        t_llm = (time.perf_counter() - t_stage) * 1000
+        t_stage = time.perf_counter()
 
         # Visualization is optional — only run when the response asks for a map/chart.
         viz_payload = {}
@@ -421,7 +434,15 @@ class ReasoningAgent(BaseAgent):
             except Exception as e:
                 logger.warning(f"Viz skipped: {e}")
 
+        t_viz = (time.perf_counter() - t_stage) * 1000
         duration_ms = (time.perf_counter() - start) * 1000
+
+        # Single-line stage breakdown — grep "STAGE" in logs to see hot paths.
+        logger.info(
+            f"STAGE intent={intent} total={duration_ms:.0f}ms "
+            f"data={t_data:.0f} health={t_health:.0f} gis={t_gis:.0f} "
+            f"llm={t_llm:.0f} viz={t_viz:.0f}"
+        )
 
         return {
         **response,

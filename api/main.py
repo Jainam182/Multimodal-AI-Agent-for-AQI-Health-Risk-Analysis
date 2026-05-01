@@ -161,7 +161,8 @@ def get_health_risk(city: str, persona: str, exposure_hours: int = 8):
     health_out = agents["health"].run(health_msg)
     h = health_out.payload or {}
     risks = h.get("persona_risks", {})
-    persona_key = persona.lower().replace(" ", "_")
+    from tools.health_tools import resolve_persona_key
+    persona_key = resolve_persona_key(persona)
     risk = risks.get(persona_key, next(iter(risks.values()), {})) if risks else {}
 
     return {

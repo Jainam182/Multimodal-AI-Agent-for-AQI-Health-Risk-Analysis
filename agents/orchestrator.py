@@ -235,7 +235,8 @@ def _llm_health_advice(
     """Generate concise health advice using LLM — only for persona-specific guidance."""
     persona = health_payload.get("persona", "General Population")
     risks = health_payload.get("persona_risks", {})
-    persona_key = persona.lower().replace(" ", "_")
+    from tools.health_tools import resolve_persona_key
+    persona_key = resolve_persona_key(persona)
     risk_info = risks.get(persona_key, next(iter(risks.values()), {})) if risks else {}
     risk_level = risk_info.get("risk_level", "Unknown")
     risk_score = risk_info.get("risk_score", 0)
@@ -361,7 +362,7 @@ def _rule_based_response(
         )[:5]
 
         text = f"Most polluted areas in {city}:\n"
-        for r in top:
+        for r in top_readings:
             text += f"- {r.get('station_name')} (AQI {r.get('aqi')})\n"
 
         # Enrich with GIS data if available

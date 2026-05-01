@@ -462,7 +462,8 @@ def _render_health_panel(agents, data_out, persona, avg_aqi):
     )
     h = h_out.payload or {}
     risks = h.get("persona_risks", {})
-    persona_key = persona.lower().replace(" ", "_")
+    from tools.health_tools import resolve_persona_key
+    persona_key = resolve_persona_key(persona)
     risk = risks.get(persona_key, risks.get(list(risks.keys())[0], {})) if risks else {}
 
     score = risk.get("risk_score", 0)
@@ -559,7 +560,10 @@ def _render_station_table(readings):
         }
         return colours.get(cat, "")
 
-    styled = df.style.applymap(colour_aqi, subset=["AQI"])
+    # pandas >=2.4 removed Styler.applymap; .map is the replacement.
+    # Use getattr so this still works on older pandas where .map didn't exist yet.
+    _styler_map = getattr(df.style, "map", None) or df.style.applymap
+    styled = _styler_map(colour_aqi, subset=["AQI"])
     st.dataframe(styled, use_container_width=True, height=280)
 
 
@@ -1282,8 +1286,11 @@ def _render_health_detail(health_data: dict, exp_data: dict, focus_persona: str)
     if exp_data.get("health_explanation"):
         st.markdown(f'<div class="info-box">{exp_data["health_explanation"]}</div>', unsafe_allow_html=True)
 
-    # Focus persona deep dive
-    persona_key = focus_persona.lower().replace(" ", "_")
+    # Focus persona deep dive — use the canonical resolver, not naive
+    # slug-from-label, otherwise plural UI labels miss and the lookup
+    # falls through to the first dict key (always "children").
+    from tools.health_tools import resolve_persona_key
+    persona_key = resolve_persona_key(focus_persona)
     risk = risks.get(persona_key, next(iter(risks.values()), {})) if risks else {}
 
     if risk:

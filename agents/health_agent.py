@@ -24,6 +24,7 @@ from tools.health_tools import (
     get_mask_recommendation,
     get_outdoor_recommendation,
     get_pollutant_health_note,
+    resolve_persona_key,
 )
 from utils.logger import get_logger
 
@@ -85,12 +86,12 @@ class HealthAgent(BaseAgent):
         logger.info(f"HealthAgent pollutants: {resolved_pollutants}")
 
         # ── Build persona keys to analyze ─────────────────────────────────────
-        if persona and persona in PERSONA_RULES:
-            target_keys = [persona]
-        elif persona and persona.lower() != "all":
-            # Try fuzzy match
-            slug = persona.lower().replace(" ", "_")
-            target_keys = [slug] if slug in PERSONA_RULES else list(PERSONA_RULES.keys())
+        # Use resolve_persona_key so plural UI labels like "Asthma Patients"
+        # map to the singular rules key "asthma_patient" instead of falling
+        # through to the all-personas branch.
+        if persona and persona.lower() != "all":
+            resolved = resolve_persona_key(persona)
+            target_keys = [resolved]
         else:
             target_keys = list(PERSONA_RULES.keys())
 

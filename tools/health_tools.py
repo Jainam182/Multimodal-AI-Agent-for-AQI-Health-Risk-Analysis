@@ -101,6 +101,66 @@ def get_pollutant_health_note(pollutant: str, value: float) -> str:
     return note
 
 
+# ─── Persona label → key resolver ─────────────────────────────────────────────
+# UI selectboxes use plural human-readable labels ("Asthma Patients") but
+# PERSONA_RULES keys are singular slugs ("asthma_patient"). Without an
+# explicit map, naive `.lower().replace(" ", "_")` produces "asthma_patients"
+# which doesn't exist → the UI silently fell back to the first key (children),
+# making every persona render as Children. Centralising the map here means
+# both app.py and HealthAgent resolve the same way.
+
+_PERSONA_LABEL_ALIASES: Dict[str, str] = {
+    "general population":  "general_population",
+    "children":            "children",
+    "elderly":             "elderly",
+    "asthma":              "asthma_patient",
+    "asthma patient":      "asthma_patient",
+    "asthma patients":     "asthma_patient",
+    "copd":                "copd_patient",
+    "copd patient":        "copd_patient",
+    "copd patients":       "copd_patient",
+    "heart":               "heart_patient",
+    "heart patient":       "heart_patient",
+    "heart patients":      "heart_patient",
+    "athlete":             "athlete",
+    "athletes":            "athlete",
+    "outdoor worker":      "outdoor_worker",
+    "outdoor workers":     "outdoor_worker",
+    "pregnant":            "pregnant",
+    "pregnant women":      "pregnant",
+    "respiratory":         "respiratory_patient",
+    "respiratory patient": "respiratory_patient",
+    "respiratory patients":"respiratory_patient",
+    # Diabetic Patients is in the UI list but has no PERSONA_RULES entry —
+    # map it to general_population so the app shows real data instead of
+    # silently falling through to children.
+    "diabetic":            "general_population",
+    "diabetic patient":    "general_population",
+    "diabetic patients":   "general_population",
+}
+
+def resolve_persona_key(persona: str) -> str:
+    """Map any persona label/slug to a canonical PERSONA_RULES key.
+
+    Accepts: "Asthma Patients", "asthma_patient", "asthma", etc.
+    Returns: "asthma_patient" (or "general_population" if unrecognised).
+    """
+    if not persona:
+        return "general_population"
+    p = persona.strip().lower()
+    # Already a canonical key?
+    if p in PERSONA_RULES:
+        return p
+    # Known label alias?
+    if p in _PERSONA_LABEL_ALIASES:
+        return _PERSONA_LABEL_ALIASES[p]
+    # Slug-from-label as a last resort (handles labels we didn't enumerate).
+    slug = p.replace(" ", "_")
+    if slug in PERSONA_RULES:
+        return slug
+    return "general_population"
+
+
 # ─── Persona Health Rules ─────────────────────────────────────────────────────
 
 PERSONA_RULES: Dict[str, Dict] = {

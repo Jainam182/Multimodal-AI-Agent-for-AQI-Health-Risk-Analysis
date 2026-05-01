@@ -3,3 +3,22 @@
 data/aqi_store.db
 data/aqi_store.db-shm
 data/aqi_store.db-wal
+
+# Python bytecode
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local runtime data
+logs/
+data/chroma_db/
+
+# OS / editor
+.DS_Store
+*.swp
