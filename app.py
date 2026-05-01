@@ -598,17 +598,19 @@ def render_ask_agent(agents):
 
     st.markdown("---")
 
-    # ── Chat history ──────────────────────────────────────────────────────────
-    chat_container = st.container()
-    with chat_container:
-        for msg in st.session_state.chat_messages:
-            with st.chat_message(msg["role"]):
-                if msg["role"] == "user":
-                    st.markdown(msg["content"])
-                else:
-                    _render_chat_response(msg["content"])
-
-    # ── Input ─────────────────────────────────────────────────────────────────
+    # ── Input first: capture query, compute, persist BEFORE rendering ────────
+    # Why this order matters:
+    # The previous flow rendered the assistant inline and ALSO appended to
+    # history then called st.rerun() — which produced two rerun cycles
+    # (chat_input fires its own rerun) and double-rendered widgets with
+    # time_ns() keys, causing the response to flash and vanish. Worse, if
+    # _render_chat_response raised mid-way, the history append was skipped
+    # and the response was lost forever.
+    #
+    # New flow: compute → persist to session_state → let Streamlit's normal
+    # rerun render from history exactly once. No inline rendering of the
+    # in-progress message; no explicit st.rerun(); no race between
+    # st.chat_input's auto-rerun and our append.
     prefill = st.session_state.pop("prefill_query", "")
     query   = st.chat_input(
         f"Ask about AQI, health risks, hotspots… (City: {city})",
@@ -618,23 +620,37 @@ def render_ask_agent(agents):
         query = prefill
 
     if query:
-        # 1. Show user message immediately
-        with st.chat_message("user"):
-            st.markdown(query)
-
-        # 2. Compute response (spinner shown while working)
-        with st.chat_message("assistant"):
-            with st.spinner("Analyzing…"):
+        # Persist the user message immediately so it survives any failure below.
+        st.session_state.chat_messages.append({"role": "user", "content": query})
+        with st.spinner("Analyzing…"):
+            try:
                 result = _run_query(agents, query)
-            _render_chat_response(result)
-
-        # 3. Save BOTH messages to history AFTER rendering succeeds.
-        #    Do this as a single atomic write so no rerun can fire between them.
-        st.session_state.chat_messages.append({"role": "user",      "content": query})
+            except Exception as e:
+                # Defensive: never let a render-time exception swallow the
+                # assistant turn. Convert to a structured error payload so
+                # the history always contains an assistant reply per user
+                # turn — pairing stays consistent.
+                logger.exception("chat pipeline failed")
+                result = {"text": f"Sorry, something went wrong: {e}", "intent": "error"}
         st.session_state.chat_messages.append({"role": "assistant", "content": result})
-        # 4. Explicit rerun so the history container re-renders cleanly on the
-        #    next pass (chat_input is now cleared, no double-render risk).
-        st.rerun()
+        # Streamlit's chat_input already triggers a rerun on submit; we let
+        # that rerun render the new history. No explicit st.rerun() — that
+        # was the source of the double-render race.
+
+    # ── Chat history (single source of truth for rendering) ──────────────────
+    chat_container = st.container()
+    with chat_container:
+        for idx, msg in enumerate(st.session_state.chat_messages):
+            with st.chat_message(msg["role"]):
+                if msg["role"] == "user":
+                    st.markdown(msg["content"])
+                else:
+                    # Pass a stable per-message index so any keyed widgets
+                    # inside the renderer (Plotly charts, st_folium maps)
+                    # get deterministic keys instead of time_ns() — that
+                    # was making Streamlit treat each rerun's chart as a
+                    # brand-new widget and unmount the old one.
+                    _render_chat_response(msg["content"], msg_idx=idx)
 
 
 def _run_query(agents, query: str) -> dict:
@@ -659,10 +675,15 @@ def _run_query(agents, query: str) -> dict:
         return {"text": f"Sorry, I ran into an error: {e}", "intent": "error"}
 
 
-def _render_chat_response(result):
+def _render_chat_response(result, msg_idx: int = 0):
     """
     Minimal, intent-aware response renderer.
     Shows only what the query actually needs — no forced dashboards.
+
+    msg_idx: stable per-message index used for widget keys. Using time_ns()
+    here generated a fresh key on every rerun, which forced Streamlit to
+    unmount and remount the chart/map — sometimes mid-frame, causing the
+    response to render blank. A stable key per chat turn fixes that.
     """
     if isinstance(result, str):
         st.markdown(result)
@@ -716,7 +737,7 @@ def _render_chat_response(result):
                 margin=dict(l=0, r=60, t=10, b=0),
                 showlegend=False,
             )
-            st.plotly_chart(fig, use_container_width=True, key=f"comp_chart_{time.time_ns()}")
+            st.plotly_chart(fig, use_container_width=True, key=f"comp_chart_{msg_idx}")
         except Exception:
             pass  # graceful fallback — text is already shown above
 
@@ -740,7 +761,16 @@ def _render_chat_response(result):
                 label = f"🗺️ Spatial Map ({radius:.0f}km radius)"
             with st.expander(label, expanded=True):
                 if isinstance(fmap, _folium.Map):
-                    st_folium(fmap, height=360, use_container_width=True)
+                    # Stable key + returned_objects=[] prevents st_folium
+                    # from triggering interactive reruns that race with our
+                    # session_state writes. We don't need click coords back
+                    # for the chat view, so disabling the return channel
+                    # cuts the map's rerun cost too.
+                    st_folium(
+                        fmap, height=360, use_container_width=True,
+                        key=f"chat_map_{msg_idx}",
+                        returned_objects=[],
+                    )
                 elif isinstance(fmap, str):
                     st.components.v1.html(fmap, height=360)
 
@@ -749,7 +779,7 @@ def _render_chat_response(result):
         hc = _safe_fig(viz.get("health_chart"))
         if hc:
             with st.expander("📊 Risk by Persona", expanded=False):
-                st.plotly_chart(hc, use_container_width=True, key=f"chat_chart_{time.time_ns()}")
+                st.plotly_chart(hc, use_container_width=True, key=f"chat_chart_{msg_idx}")
 
     # ── Metadata footer (subtle, not dominant) ────────────────────────────────
     city    = result.get("city", "")
