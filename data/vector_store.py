@@ -6,6 +6,7 @@ health reports, and past query results.
 Enables context-aware retrieval augmented generation (RAG).
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from __future__ import annotations
 import json
 from datetime import datetime
@@ -19,6 +20,7 @@ logger = get_logger("vector_store")
 Path(CHROMA_PATH).mkdir(parents=True, exist_ok=True)
 
 
+# ─── Vector store with ChromaDB primary path + keyword fallback ───────────────
 class VectorStore:
     """
     ChromaDB-backed vector store with sentence-transformers embeddings.
@@ -34,6 +36,7 @@ class VectorStore:
         if ENABLE_VECTOR_SEARCH:
             self._init_chroma()
 
+    # ─── Backend initialization (chroma if available, fallback otherwise) ───
     def _init_chroma(self):
         try:
             import chromadb
@@ -58,6 +61,7 @@ class VectorStore:
         except Exception as e:
             logger.warning(f"ChromaDB init failed: {e}. Using fallback.")
 
+    # ─── Public CRUD ────────────────────────────────────────────────────────
     def add_document(
         self,
         doc_id: str,
@@ -128,6 +132,7 @@ class VectorStore:
                 scored.append({"text": doc["text"], "metadata": doc["metadata"], "distance": 1.0 / (overlap + 1)})
         return sorted(scored, key=lambda x: x["distance"])[:n_results]
 
+    # ─── Convenience wrappers for the agent layer ───────────────────────────
     def add_aqi_summary(self, city: str, station: str, aqi: float, summary: str, timestamp: str):
         """Convenience method to store an AQI summary document."""
         doc_id = f"aqi_{city}_{station}_{timestamp}".replace(" ", "_")
@@ -165,5 +170,5 @@ class VectorStore:
         return len(self._fallback_store)
 
 
-# Singleton
+# ─── Module-level singleton — every caller imports `vector_store` from here ──
 vector_store = VectorStore()

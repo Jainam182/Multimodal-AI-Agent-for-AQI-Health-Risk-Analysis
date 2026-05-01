@@ -5,6 +5,7 @@ AQI calculation, pollutant normalization, sub-index computation,
 and data preprocessing utilities used by the Data Agent.
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from __future__ import annotations
 import math
 from typing import Dict, Optional, Tuple
@@ -75,6 +76,7 @@ CPCB_BREAKPOINTS: Dict[str, list] = {
 }
 
 
+# ─── AQI computation ──────────────────────────────────────────────────────────
 def compute_sub_index(pollutant: str, concentration: float) -> Optional[float]:
     """
     Compute CPCB sub-index for a single pollutant using linear interpolation.
@@ -187,6 +189,7 @@ def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+# ─── Quality assurance ────────────────────────────────────────────────────────
 def validate_data_quality(df: pd.DataFrame) -> Dict:
     """
     Compute data quality metrics for a processed DataFrame.
@@ -228,6 +231,7 @@ def validate_data_quality(df: pd.DataFrame) -> Dict:
     }
 
 
+# ─── Imputation & feature engineering ─────────────────────────────────────────
 def impute_missing_values(df: pd.DataFrame, method: str = "linear") -> pd.DataFrame:
     """
     Impute missing pollutant values using time-series interpolation.

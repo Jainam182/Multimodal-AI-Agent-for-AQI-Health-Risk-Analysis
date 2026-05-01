@@ -3,6 +3,7 @@ Optional FastAPI backend — exposes the multi-agent system as a REST API.
 Run: uvicorn api.main:app --reload --port 8000
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -16,6 +17,7 @@ import os
 # Allow imports from parent dir when run as module
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+# ─── FastAPI app + CORS ───────────────────────────────────────────────────────
 app = FastAPI(
     title="AQI Health Risk Intelligence API",
     description="Multi-Agent AI System for AQI and Health Risk Analysis",

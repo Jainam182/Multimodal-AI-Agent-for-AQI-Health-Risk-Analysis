@@ -5,6 +5,7 @@ SQLAlchemy-based SQLite database manager.
 Schema: stations, aqi_readings, health_reports, agent_logs.
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from __future__ import annotations
 import json
 from datetime import datetime
@@ -22,6 +23,7 @@ from utils.logger import get_logger
 
 logger = get_logger("database")
 
+# ─── Engine + connection setup ────────────────────────────────────────────────
 Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
 engine = create_engine(
     f"sqlite:///{DB_PATH}",
@@ -40,6 +42,7 @@ def set_sqlite_pragma(dbapi_conn, connection_record):
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
+# ─── ORM declarative base ─────────────────────────────────────────────────────
 class Base(DeclarativeBase):
     pass
 
@@ -109,7 +112,7 @@ class AgentLogModel(Base):
     created_at   = Column(DateTime, default=datetime.utcnow)
 
 
-# Create all tables
+# Create all tables on import — idempotent, safe to run repeatedly.
 Base.metadata.create_all(engine)
 
 
@@ -256,5 +259,5 @@ class DatabaseManager:
             session.commit()
 
 
-# Singleton
+# ─── Module-level singleton — every caller imports `db` from here ─────────────
 db = DatabaseManager()

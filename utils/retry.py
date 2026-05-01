@@ -2,6 +2,7 @@
 utils/retry.py – Retry decorator using tenacity for robust API calls.
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -15,6 +16,7 @@ import requests
 
 std_logger = logging.getLogger("tenacity")
 
+# ─── Retry policies (one per call type, all use exponential backoff) ──────────
 # Standard API retry: 3 attempts, exponential backoff 1–10s
 api_retry = retry(
     stop=stop_after_attempt(3),

@@ -4,6 +4,7 @@ agents/visualization_agent.py
 All inputs are plain dict payloads. Returns Folium map object + Plotly dicts.
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
@@ -22,6 +23,7 @@ from utils.logger import get_logger
 
 logger = get_logger("VisualizationAgent")
 
+# ─── Color palettes (used by health bar chart and Folium markers) ─────────────
 RISK_COLORS = {
     "Minimal":   "#00b300",
     "Low":       "#80cc00",
@@ -42,9 +44,11 @@ AQI_CIRCLE_COLOR = {
 }
 
 
+# ─── Visualization agent — Folium maps + Plotly charts ───────────────────────
 class VisualizationAgent(BaseAgent):
     agent_name = AgentName.VISUALIZATION
 
+    # ─── BaseAgent contract: assemble all renderable artifacts ───────────────
     def _execute(
         self,
         message_id: str,

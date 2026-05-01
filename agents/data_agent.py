@@ -15,6 +15,7 @@ Source priority:
   Returns empty payload with error if all fail.
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from __future__ import annotations
 import re
 import time
@@ -151,11 +152,13 @@ CITY_STATIONS: Dict[str, List[Dict]] = {
 }
 
 
+# ─── Data agent — multi-source ingestion with fallback chain ─────────────────
 class DataAgent(BaseAgent):
     agent_name = AgentName.DATA
     _session: Optional[requests.Session] = None
     _coord_cache: Dict[str, Tuple[float, float]] = {}
 
+    # ─── Shared HTTP session (browser-like UA to bypass basic bot filters) ───
     def _http(self) -> requests.Session:
         if self._session is None:
             s = requests.Session()

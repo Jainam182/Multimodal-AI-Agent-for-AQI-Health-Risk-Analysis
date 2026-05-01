@@ -2,11 +2,13 @@
 utils/logger.py – Centralized logging configuration using loguru.
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 import sys
 from loguru import logger as _logger
 from config import LOG_LEVEL
 
-# Remove default handler
+# ─── Sink configuration ───────────────────────────────────────────────────────
+# Remove default handler so we control formatting/destinations explicitly.
 _logger.remove()
 
 # Console handler – coloured and structured
@@ -31,6 +33,7 @@ _logger.add(
 logger = _logger
 
 
+# ─── Public factory ───────────────────────────────────────────────────────────
 def get_logger(name: str):
     """Return a bound logger with component name context."""
     return _logger.bind(name=name)

@@ -5,6 +5,7 @@ Health Agent: Deterministic health risk engine.
 All persona data returned as plain dicts in payload.
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
@@ -29,9 +30,11 @@ from utils.logger import get_logger
 logger = get_logger("HealthAgent")
 
 
+# ─── Health agent — deterministic risk engine (no LLM in the hot path) ────────
 class HealthAgent(BaseAgent):
     agent_name = AgentName.HEALTH
 
+    # ─── BaseAgent contract: build risk payload from data + persona ──────────
     def _execute(
         self,
         message_id: str,
@@ -109,6 +112,7 @@ class HealthAgent(BaseAgent):
         mask_rec = get_mask_recommendation(resolved_aqi, target_keys[0] if target_keys else "general_population")
 
         # ── Alert logic ───────────────────────────────────────────────────────
+        # Alert fires on either absolute AQI bands or any persona's score ≥ 7.
         max_score = max((v["risk_score"] for v in persona_risks.values()), default=0)
         alert_triggered = resolved_aqi > 200 or max_score >= 7.0
         if resolved_aqi > 300:

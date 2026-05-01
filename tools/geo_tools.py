@@ -5,6 +5,7 @@ Geospatial utility functions: geocoding, coordinate validation,
 distance calculations, bounding boxes, and spatial joins.
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from __future__ import annotations
 import math
 from typing import Dict, List, Optional, Tuple
@@ -12,6 +13,7 @@ import requests
 from config import INDIAN_CITIES
 
 
+# ─── Distance & geometry ──────────────────────────────────────────────────────
 def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Great-circle distance in kilometres between two lat/lon points."""
     R = 6371.0
@@ -21,6 +23,7 @@ def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
+# ─── Geocoding & coordinate utilities ────────────────────────────────────────
 def geocode_city(city: str) -> Optional[Tuple[float, float]]:
     """
     Return (lat, lon) for a city name.
@@ -80,6 +83,7 @@ def assign_mock_coordinates(station_name: str, city: str) -> Tuple[float, float]
     return round(base_lat + lat_offset, 6), round(base_lon + lon_offset, 6)
 
 
+# ─── Spatial filtering ────────────────────────────────────────────────────────
 def stations_within_radius(
     stations: List[Dict],
     center_lat: float,

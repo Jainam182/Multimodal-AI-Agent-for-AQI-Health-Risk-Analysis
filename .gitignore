@@ -1,0 +1,5 @@
+
+# Large SQLite files (>100MB, GitHub-rejected)
+data/aqi_store.db
+data/aqi_store.db-shm
+data/aqi_store.db-wal

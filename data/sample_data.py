@@ -6,6 +6,7 @@ Used when APIs are unavailable or for offline development.
 Includes seasonal patterns, diurnal cycles, and station-specific variation.
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from __future__ import annotations
 import random
 import math
@@ -35,6 +36,7 @@ MUMBAI_STATION_PROFILES = {
 }
 
 
+# ─── Temporal modulation factors (applied on top of station base values) ─────
 def diurnal_factor(hour: int) -> float:
     """
     Return a multiplier based on hour of day.
@@ -57,6 +59,7 @@ def seasonal_factor(month: int) -> float:
     return winter_boost.get(month, monsoon_clean.get(month, 1.0))
 
 
+# ─── Pollutant generators ─────────────────────────────────────────────────────
 def generate_pollutants(station: str, hour: int, month: int) -> Dict[str, float]:
     """Generate realistic correlated pollutant values for a station."""
     profile = MUMBAI_STATION_PROFILES.get(station, {"base_aqi": 120, "pm25_base": 50, "no2_base": 40, "type": "mixed"})
@@ -84,6 +87,7 @@ def generate_pollutants(station: str, hour: int, month: int) -> Dict[str, float]
     }
 
 
+# ─── Public dataset builders ──────────────────────────────────────────────────
 def generate_mock_current_data(city: str = "Mumbai") -> List[LocationReading]:
     """Generate current-moment mock readings for all stations in a city."""
     now = datetime.now(timezone.utc)

@@ -14,6 +14,7 @@ Intent → Agent mapping:
   general_query       → data_agent
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from __future__ import annotations
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -24,6 +25,8 @@ from utils.logger import get_logger
 logger = get_logger("Orchestrator")
 
 
+# ─── Intent → required-agents map ─────────────────────────────────────────────
+# Each intent declares which sub-agents must run before generate_response().
 INTENTS = {
     "simple_aqi":          ["data_agent"],
     "health_query":        ["data_agent", "health_agent"],
@@ -36,6 +39,8 @@ INTENTS = {
 }
 
 
+# ─── Intent classification rules ──────────────────────────────────────────────
+# Ordered keyword → intent table; first match wins, so put most specific first.
 INTENT_RULES: List[Tuple[List[str], str]] = [
     (["trend", "history", "historical", "past", "over time"], "trend_query"),
     (["hotspot", "dangerous area", "worst area", "polluted area",
@@ -52,6 +57,7 @@ INTENT_RULES: List[Tuple[List[str], str]] = [
 ]
 
 
+# ─── Public: intent + agent routing ───────────────────────────────────────────
 def classify_intent(query: str) -> str:
     q = query.lower().strip()
     for keywords, intent in INTENT_RULES:
@@ -64,6 +70,8 @@ def decide_agents(intent: str, query: str) -> List[str]:
     return INTENTS.get(intent, INTENTS["general_query"])
 
 
+# ─── Public: response generation ──────────────────────────────────────────────
+# Combines structured agent payloads into the final UI-bound response dict.
 def generate_response(
     query: str,
     intent: str,
@@ -73,6 +81,7 @@ def generate_response(
     gis_payload: Dict,
 ) -> Dict[str, Any]:
 
+    # Aggregate the raw readings into a single AQI summary used by every branch below.
     readings = data_payload.get("readings", [])
     avg_aqi = _avg_aqi(readings)
     category = readings[0].get("aqi_category", "Unknown") if readings else "Unknown"
@@ -107,7 +116,7 @@ def generate_response(
             "city": city,
         }
 
-    # ── For non-GIS queries: use LLM normally ───────────────────────────────
+    # ── For non-GIS queries: use LLM normally, fall back to rules if it fails ──
     if GROQ_API_KEY or OPENAI_API_KEY:
         try:
             text = _llm_response(
@@ -125,7 +134,7 @@ def generate_response(
         except Exception as e:
             logger.warning(f"LLM failed: {e}")
 
-    # Fallback
+    # No LLM keys configured — deterministic rule-based response only.
     text = _rule_based_response(
         intent, city, avg_aqi, category,
         readings, health_payload, gis_payload
@@ -141,11 +150,13 @@ def generate_response(
     }
 
 
+# ─── Private: LLM-backed response generation ──────────────────────────────────
 def _llm_response(
     query, intent, city, avg_aqi, category,
     data_payload, health_payload, gis_payload
 ) -> str:
 
+    # Build a structured context string from all available agent payloads.
     ctx = [
         f"City: {city}",
         f"AQI: {avg_aqi:.0f} ({category})"
@@ -192,6 +203,7 @@ def _llm_response(
 
     user_msg = f"{context}\n\nUser: {query}"
 
+    # Provider dispatch — Groq preferred for latency, OpenAI as fallback.
     if LLM_PROVIDER == "groq" and GROQ_API_KEY:
         from groq import Groq
         resp = Groq(api_key=GROQ_API_KEY).chat.completions.create(
@@ -274,6 +286,7 @@ def _llm_health_advice(
         return ""
 
 
+# ─── Private: deterministic rule-based response (LLM-free fallback) ───────────
 def _rule_based_response(
     intent, city, avg_aqi, category,
     readings, health_payload, gis_payload
@@ -383,6 +396,7 @@ def _rule_based_response(
     return f"AQI in {city} is {aqi_str}."
 
 
+# ─── Private: small helpers ───────────────────────────────────────────────────
 def _avg_aqi(readings):
     if not readings:
         return 0

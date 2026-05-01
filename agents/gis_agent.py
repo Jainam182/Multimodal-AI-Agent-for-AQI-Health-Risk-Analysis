@@ -13,6 +13,7 @@ Capabilities:
   - Distance-based risk radius computation
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from __future__ import annotations
 from typing import Dict, List, Optional, Tuple
 
@@ -37,11 +38,13 @@ from utils.logger import get_logger
 logger = get_logger("GISAgent")
 
 
+# ─── GIS agent — spatial clustering, hotspots, heatmaps ───────────────────────
 class GISAgent(BaseAgent):
     """Performs all spatial analysis on AQI station data."""
 
     agent_name = AgentName.GIS
 
+    # ─── BaseAgent contract: build the spatial payload ───────────────────────
     def _execute(
         self,
         message_id: str,
@@ -110,6 +113,7 @@ class GISAgent(BaseAgent):
 
         logger.info(f"GISAgent: {len(stations_list)} stations, city={city}")
 
+        # Build a numeric DataFrame — coerce strings and NaNs to 0 so DBSCAN won't choke.
         df = pd.DataFrame(stations_list)
         for col in ["lat", "lon", "aqi"]:
             if col in df.columns:

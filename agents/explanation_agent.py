@@ -4,6 +4,7 @@ agents/explanation_agent.py
 All inputs are plain dict payloads. LLM path + rule-based fallback.
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from __future__ import annotations
 from typing import Dict, List, Optional
 
@@ -19,9 +20,11 @@ from utils.retry import llm_retry
 logger = get_logger("ExplanationAgent")
 
 
+# ─── Explanation agent — narrative summaries (LLM with rule-based fallback) ──
 class ExplanationAgent(BaseAgent):
     agent_name = AgentName.EXPLANATION
 
+    # ─── BaseAgent contract: produce the narrative payload ───────────────────
     def _execute(
         self,
         message_id: str,
@@ -42,7 +45,7 @@ class ExplanationAgent(BaseAgent):
 
         logger.info(f"ExplanationAgent: city={city}, persona={persona}, query='{query}'")
 
-        # RAG context
+        # RAG context — pull relevant prior summaries from ChromaDB if the user asked something specific.
         rag_context = ""
         if query:
             try:

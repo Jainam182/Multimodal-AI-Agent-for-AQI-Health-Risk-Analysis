@@ -5,6 +5,7 @@ All agents communicate via AgentMessage with payload: Dict[str, Any].
 No nested Pydantic Payload sub-classes — plain dicts throughout.
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from __future__ import annotations
 import uuid
 from datetime import datetime

@@ -18,6 +18,7 @@ process_query() returns a chat-ready dict:
   }
 """
 
+# ─── Imports ──────────────────────────────────────────────────────────────────
 from __future__ import annotations
 from email.mime import text
 import time
@@ -36,11 +37,14 @@ from utils.logger import get_logger
 logger = get_logger("ReasoningAgent")
 
 
+# ─── Reasoning agent — top-level pipeline coordinator ─────────────────────────
 class ReasoningAgent(BaseAgent):
     agent_name = AgentName.REASONING
 
+    # ─── Construction: instantiate each sub-agent once and keep references ────
     def __init__(self):
         super().__init__()
+        # Lazy imports avoid circular import chains between agents.
         from agents.data_agent import DataAgent
         from agents.gis_agent import GISAgent
         from agents.health_agent import HealthAgent
@@ -60,6 +64,7 @@ class ReasoningAgent(BaseAgent):
             "gis_agent":    self._gis_agent,
         }
     
+    # ─── Entity extraction helpers (regex over the raw query) ────────────────
     def _extract_radius(self, query: str) -> Optional[float]:
         """Extract a radius in km from natural language e.g. 'within 5km of Andheri'."""
         import re
@@ -133,6 +138,7 @@ class ReasoningAgent(BaseAgent):
         return default_persona or "General Population"
 
 
+    # ─── Multi-city extraction (drives comparison_query branching) ───────────
     def _extract_cities(self, query: str, default_city: str) -> list:
         q = query.lower()
         found = []
@@ -212,7 +218,7 @@ class ReasoningAgent(BaseAgent):
 
         start = time.perf_counter()
 
-    # ── 1. Extract entities ─────────────────────────────
+    # ── 1. Extract entities (cities, persona, activity, environment) ─────
         cities = self._extract_cities(query, city)
         persona = self._extract_persona(query, persona)
         activity_level = self._extract_activity_level(query)
@@ -230,6 +236,8 @@ class ReasoningAgent(BaseAgent):
     )
 
     # ── 2. HANDLE COMPARISON (FORCE OVERRIDE) ───────────
+    # Comparison short-circuits the normal pipeline: fetch data + score risk
+    # for every city, then build a markdown table — no map/viz needed.
         if is_comparison:
 
             comparison_data = []
@@ -347,6 +355,7 @@ class ReasoningAgent(BaseAgent):
             }
 
     # ── 3. NORMAL PIPELINE ──────────────────────────────
+    # Classify intent → decide which sub-agents to call → run them in order.
         intent = classify_intent(query)
         agents_needed = decide_agents(intent, query)
 
@@ -396,6 +405,7 @@ class ReasoningAgent(BaseAgent):
         gis_payload=gis_p,
         )
 
+        # Visualization is optional — only run when the response asks for a map/chart.
         viz_payload = {}
         if response.get("map") or response.get("chart"):
             try:
